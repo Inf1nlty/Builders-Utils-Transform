@@ -1,0 +1,10 @@
+commands.copy=%d blocks and %d entities got copied.
+commands.cut=%d blocks got cut.
+commands.paste=%d blocks and %d entities got edited.
+commands.prefix=>
+commands.error.selection1=1 position is needed for this command.
+commands.error.selection2=2 positions are needed for this command.
+commands.error.selection3=3 positions are needed for this command.
+commands.error.error=An error occurred when processing the command.
+commands.pos1=First pos got selected.
+commands.pos2=Second pos got selected.
