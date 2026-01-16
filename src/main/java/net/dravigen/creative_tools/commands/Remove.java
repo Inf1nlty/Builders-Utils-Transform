@@ -3,10 +3,12 @@ package net.dravigen.creative_tools.commands;
 import api.world.BlockPos;
 import net.minecraft.src.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 
 import static net.dravigen.creative_tools.api.ToolHelper.*;
-import static net.dravigen.creative_tools.api.ToolHelper.SAVED_NUM;
 
 public class Remove extends CommandBase {
 	@Override
@@ -17,17 +19,6 @@ public class Remove extends CommandBase {
 	@Override
 	public String getCommandUsage(ICommandSender iCommandSender) {
 		return "/remove [x1/y1/z1] [x2/y2/z2]";
-	}
-	
-	@Override
-	public List addTabCompletionOptions(ICommandSender sender, String[] strings) {
-		MovingObjectPosition block = getBlockPlayerIsLooking(sender);
-		
-		if (block != null && strings.length < 3) {
-			return getListOfStringsMatchingLastWord(strings, block.blockX + "/" + block.blockY + "/" + block.blockZ);
-		}
-		
-		return null;
 	}
 	
 	@Override
@@ -98,5 +89,16 @@ public class Remove extends CommandBase {
 								   duplicateSavedList(edit),
 								   new int[SAVED_NUM],
 								   player));
+	}
+	
+	@Override
+	public List addTabCompletionOptions(ICommandSender sender, String[] strings) {
+		MovingObjectPosition block = getBlockPlayerIsLooking(sender);
+		
+		if (block != null && strings.length < 3) {
+			return getListOfStringsMatchingLastWord(strings, block.blockX + "/" + block.blockY + "/" + block.blockZ);
+		}
+		
+		return null;
 	}
 }

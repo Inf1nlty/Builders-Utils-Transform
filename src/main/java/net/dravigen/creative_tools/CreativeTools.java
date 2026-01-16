@@ -5,19 +5,19 @@ import api.BTWAddon;
 import net.dravigen.creative_tools.commands.*;
 
 public class CreativeTools extends BTWAddon {
-    private static CreativeTools instance;
-
-    public CreativeTools() {
-        super();
+	private static CreativeTools instance;
+	
+	public CreativeTools() {
+		super();
 		instance = this;
-    }
-
-    @Override
-    public void initialize() {
-        AddonHandler.logMessage(this.getName() + " Version " + this.getVersionString() + " Initializing...");
-   		
+	}
+	
+	@Override
+	public void initialize() {
+		AddonHandler.logMessage(this.getName() + " Version " + this.getVersionString() + " Initializing...");
+		
 		initCommands();
-    }
+	}
 	
 	private void initCommands() {
 		registerAddonCommand(new Copy());

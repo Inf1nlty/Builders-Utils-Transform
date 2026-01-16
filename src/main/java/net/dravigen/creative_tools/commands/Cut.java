@@ -3,13 +3,12 @@ package net.dravigen.creative_tools.commands;
 import api.world.BlockPos;
 import net.minecraft.src.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 
 import static net.dravigen.creative_tools.api.ToolHelper.*;
-import static net.dravigen.creative_tools.api.ToolHelper.copyBlockList;
-import static net.dravigen.creative_tools.api.ToolHelper.copyEntityList;
-import static net.dravigen.creative_tools.api.ToolHelper.pos1;
-import static net.dravigen.creative_tools.api.ToolHelper.pos2;
 
 public class Cut extends CommandBase {
 	@Override
@@ -20,17 +19,6 @@ public class Cut extends CommandBase {
 	@Override
 	public String getCommandUsage(ICommandSender iCommandSender) {
 		return "/cut [x1/y1/z1] [x2/y2/z2]";
-	}
-	
-	@Override
-	public List addTabCompletionOptions(ICommandSender sender, String[] strings) {
-		MovingObjectPosition block = getBlockPlayerIsLooking(sender);
-		
-		if (block != null && strings.length < 3) {
-			return getListOfStringsMatchingLastWord(strings, block.blockX + "/" + block.blockY + "/" + block.blockZ);
-		}
-		
-		return null;
 	}
 	
 	@Override
@@ -113,5 +101,16 @@ public class Cut extends CommandBase {
 								   new int[SAVED_NUM],
 								   player));
 		
+	}
+	
+	@Override
+	public List addTabCompletionOptions(ICommandSender sender, String[] strings) {
+		MovingObjectPosition block = getBlockPlayerIsLooking(sender);
+		
+		if (block != null && strings.length < 3) {
+			return getListOfStringsMatchingLastWord(strings, block.blockX + "/" + block.blockY + "/" + block.blockZ);
+		}
+		
+		return null;
 	}
 }

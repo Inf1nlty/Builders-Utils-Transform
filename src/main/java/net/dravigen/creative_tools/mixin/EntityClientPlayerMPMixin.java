@@ -11,17 +11,23 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import static net.dravigen.creative_tools.api.ToolHelper.*;
+import static net.dravigen.creative_tools.api.ToolHelper.getBlockPlayerIsLooking;
+import static net.dravigen.creative_tools.api.ToolHelper.sendEditMsg;
 
 @Mixin(EntityClientPlayerMP.class)
-public abstract class EntityClientPlayerMPMixin extends EntityPlayer{
+public abstract class EntityClientPlayerMPMixin extends EntityPlayer {
+	
+	@Unique
+	boolean pressed = false;
 	
 	public EntityClientPlayerMPMixin(World par1World, String par2Str) {
 		super(par1World, par2Str);
 	}
 	
 	@Unique
-	boolean pressed = false;
+	private static @NotNull String getBlockInfos(BlockPos pos, String s) {
+		return String.format(s, pos.x, pos.y, pos.z);
+	}
 	
 	@Inject(method = "onUpdate", at = @At("HEAD"))
 	private void update(CallbackInfo ci) {
@@ -31,9 +37,11 @@ public abstract class EntityClientPlayerMPMixin extends EntityPlayer{
 		
 		if (heldItem == null) return;
 		
-		if (heldItem.getItem() == Item.axeWood && this.capabilities.isCreativeMode){
-			String pos1 = StatCollector.translateToLocal("commands.prefix") + StatCollector.translateToLocal("commands.pos1");
-			String pos2 = StatCollector.translateToLocal("commands.prefix") + StatCollector.translateToLocal("commands.pos2");
+		if (heldItem.getItem() == Item.axeWood && this.capabilities.isCreativeMode) {
+			String pos1 = StatCollector.translateToLocal("commands.prefix") +
+					StatCollector.translateToLocal("commands.pos1");
+			String pos2 = StatCollector.translateToLocal("commands.prefix") +
+					StatCollector.translateToLocal("commands.pos2");
 			
 			if (Mouse.isButtonDown(0) || Mouse.isButtonDown(1) || Mouse.isButtonDown(2)) {
 				if (!pressed && Minecraft.getMinecraft().currentScreen == null) {
@@ -73,10 +81,5 @@ public abstract class EntityClientPlayerMPMixin extends EntityPlayer{
 				pressed = false;
 			}
 		}
-	}
-	
-	@Unique
-	private static @NotNull String getBlockInfos(BlockPos pos, String s) {
-		return String.format(s, pos.x, pos.y, pos.z);
 	}
 }

@@ -1,6 +1,8 @@
 package net.dravigen.creative_tools.mixin;
 
-import net.minecraft.src.*;
+import net.minecraft.src.EntityClientPlayerMP;
+import net.minecraft.src.Item;
+import net.minecraft.src.Minecraft;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;

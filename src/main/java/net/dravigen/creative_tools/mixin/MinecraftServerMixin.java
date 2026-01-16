@@ -21,6 +21,68 @@ public abstract class MinecraftServerMixin {
 	@Unique
 	double REMOVE_SPEED = 250;
 	
+	@Unique
+	private static void removeBlock(World world, int x, int z, int y, boolean hasTile) {
+		if (world.isAirBlock(x, y, z)) return;
+		
+		Chunk chunk = world.getChunkFromChunkCoords(x >> 4, z >> 4);
+		
+		try {
+			ExtendedBlockStorage storage = ((ExtendedBlockStorage[]) storageArraysField.get(chunk))[y >> 4];
+			
+			storage.setExtBlockID(x & 0xF, y & 0xF, z & 0xF, 0);
+			//world.updateAllLightTypes(x, y, z);
+			world.markBlockForUpdate(x, y, z);
+			
+			int var7 = chunk.heightMap[z & 0xF << 4 | x & 0xF];
+			
+			Method relightBlock = chunk.getClass().getDeclaredMethod("relightBlock", int.class, int.class, int.class);
+			relightBlock.setAccessible(true);
+			
+			Method propagateSkylightOcclusion = chunk.getClass()
+					.getDeclaredMethod("propagateSkylightOcclusion", int.class, int.class);
+			propagateSkylightOcclusion.setAccessible(true);
+			
+			if (y == var7 - 1) {
+				relightBlock.invoke(chunk, x & 0xF, y, z & 0xF);
+			}
+			propagateSkylightOcclusion.invoke(chunk, x & 0xF, z & 0xF);
+			
+			if (hasTile) world.removeBlockTileEntity(x, y, z);
+		} catch (Exception e) {
+			world.setBlock(x, y, z, 0, 0, 2);
+			
+			if (hasTile) world.removeBlockTileEntity(x, y, z);
+		}
+	}
+	
+	@Unique
+	private static void pasteTile(BlockInfo blockInfo, World world, int x, int y, int z) {
+		if (blockInfo.tile() == null) return;
+		
+		NBTTagCompound tileInfo = blockInfo.tile();
+		TileEntity tile = world.getBlockTileEntity(x, y, z);
+		
+		if (tile == null) {
+			tile = TileEntity.createAndLoadEntity(tileInfo);
+			world.setBlockTileEntity(x, y, z, tile);
+		}
+		
+		if (tile == null) return;
+		
+		if (tile instanceof IInventory inv) {
+			deleteInventory(inv);
+		}
+		
+		NBTTagCompound pasteNbt = (NBTTagCompound) tileInfo.copy();
+		
+		pasteNbt.setInteger("x", x);
+		pasteNbt.setInteger("y", y);
+		pasteNbt.setInteger("z", z);
+		
+		tile.readFromNBT(pasteNbt);
+	}
+	
 	@Inject(method = "tick", at = @At("HEAD"))
 	private void tick(CallbackInfo ci) {
 		for (int j = 0; j < editList.size(); j++) {
@@ -248,76 +310,22 @@ public abstract class MinecraftServerMixin {
 												   queueInfo.player()));
 					}
 					
-					sendEditMsg(queueInfo.player(), String.format(StatCollector.translateToLocal("commands.edit"), num[0] + num[2], num[1] + num[3], num[0], num[2], num[1], num[3]));
+					sendEditMsg(queueInfo.player(),
+								String.format(StatCollector.translateToLocal("commands.edit"),
+											  num[0] + num[2],
+											  num[1] + num[3],
+											  num[0],
+											  num[2],
+											  num[1],
+											  num[3]));
 				}
 				else {
-					sendErrorMsg(queueInfo.player(), String.format(StatCollector.translateToLocal("commands.error.edit")));
+					sendErrorMsg(queueInfo.player(),
+								 String.format(StatCollector.translateToLocal("commands.error.edit")));
 				}
 				
 				editList.remove(queueInfo);
 			}
 		}
-	}
-	
-	@Unique
-	private static void removeBlock(World world, int x, int z, int y, boolean hasTile) {
-		if (world.isAirBlock(x, y, z)) return;
-		
-		Chunk chunk = world.getChunkFromChunkCoords(x >> 4, z >> 4);
-		
-		try {
-			ExtendedBlockStorage storage = ((ExtendedBlockStorage[]) storageArraysField.get(chunk))[y >> 4];
-			
-			storage.setExtBlockID(x & 0xF, y & 0xF, z & 0xF, 0);
-			//world.updateAllLightTypes(x, y, z);
-			world.markBlockForUpdate(x, y, z);
-			
-			int var7 = chunk.heightMap[z & 0xF << 4 | x & 0xF];
-			
-			Method relightBlock = chunk.getClass().getDeclaredMethod("relightBlock", int.class, int.class, int.class);
-			relightBlock.setAccessible(true);
-			
-			Method propagateSkylightOcclusion = chunk.getClass().getDeclaredMethod("propagateSkylightOcclusion", int.class, int.class);
-			propagateSkylightOcclusion.setAccessible(true);
-			
-			if (y == var7 - 1) {
-				relightBlock.invoke(chunk, x & 0xF, y, z & 0xF);
-			}
-			propagateSkylightOcclusion.invoke(chunk, x & 0xF, z & 0xF);
-			
-			if (hasTile) world.removeBlockTileEntity(x, y, z);
-		}
-		catch (Exception e) {
-			world.setBlock(x, y, z, 0, 0, 2);
-			
-			if (hasTile) world.removeBlockTileEntity(x, y, z);
-		}
-	}
-	
-	@Unique
-	private static void pasteTile(BlockInfo blockInfo, World world, int x, int y, int z) {
-		if (blockInfo.tile() == null) return;
-		
-		NBTTagCompound tileInfo = blockInfo.tile();
-		TileEntity tile = world.getBlockTileEntity(x, y, z);
-		
-		if (tile == null) {
-			tile = TileEntity.createAndLoadEntity(tileInfo);
-			world.setBlockTileEntity(x, y, z, tile);
-		}
-		
-		if (tile == null) return;
-		
-		if (tile instanceof IInventory inv) {
-			deleteInventory(inv);
-		}
-		
-		NBTTagCompound pasteNbt = (NBTTagCompound) tileInfo.copy();
-		
-		pasteNbt.setInteger("x", x);
-		pasteNbt.setInteger("y", y);
-		pasteNbt.setInteger("z", z);
-		
-		tile.readFromNBT(pasteNbt);
 	}
 }

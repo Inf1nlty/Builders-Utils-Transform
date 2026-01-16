@@ -4,57 +4,23 @@ import api.world.BlockPos;
 import net.minecraft.src.*;
 
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 
 import static net.minecraft.src.CommandBase.getPlayer;
 
 public class ToolHelper {
-	public record BlockInfo(int x, int y, int z, int id, int meta, NBTTagCompound tile) {}
-	public record BlockToRemoveInfo(int x, int y, int z, boolean hasTile) {}
-	public record QueueInfo(String id, List<Selection> selection, SavedLists editList, SavedLists undoList, SavedLists redoList, int[] num, EntityPlayer player) {}
-	public record EntityInfo(LocAndAngle locAndAngle, Class entityClass, NBTTagCompound nbt) {}
-	public record LocAndAngle(double x, double y, double z, float yaw, float pitch) {}
-	public record Selection(BlockPos pos1, BlockPos pos2) {}
-	public record SavedLists(List<BlockInfo> nonBlockList, Queue<BlockInfo> blockList, Queue<BlockInfo> allBlocks, List<EntityInfo> entities, Queue<BlockToRemoveInfo> blocksToRemove) {}
-	
-	public static SavedLists duplicateSavedList(SavedLists old) {
-		return new SavedLists(new ArrayList<>(old.nonBlockList),
-							  new LinkedList<>(old.blockList),
-							  null,
-							  new ArrayList<>(old.entities),
-							  new LinkedList<>(old.blocksToRemove));
-	}
-	
-	public static SavedLists createEmptySavedList() {
-		return new SavedLists(new ArrayList<>(), new LinkedList<>(), new LinkedList<>(), new ArrayList<>(), new LinkedList<>());
-	}
-	
-	public static void addSavedList(SavedLists holder, SavedLists toAdd) {
-		holder.blockList.addAll(toAdd.blockList);
-		holder.nonBlockList.addAll(toAdd.nonBlockList);
-		holder.entities.addAll(toAdd.entities);
-		holder.blocksToRemove.addAll(toAdd.blocksToRemove);
-	}
-	
-	public static void mergeQueue(QueueInfo holder, QueueInfo toMerge) {
-		addSavedList(holder.editList, toMerge.editList);
-		addSavedList(holder.undoList, toMerge.undoList);
-		addSavedList(holder.redoList, toMerge.redoList);
-		holder.selection.addAll(toMerge.selection);
-	}
-	
+	public static final Field storageArraysField;
 	public static int SAVED_NUM = 4;
-	
 	public static BlockPos pos1 = null;
 	public static BlockPos pos2 = null;
-	
 	public static Queue<BlockInfo> copyBlockList = new LinkedList<>();
 	public static List<EntityInfo> copyEntityList = new ArrayList<>();
 	public static List<QueueInfo> editList = new ArrayList<>();
 	public static List<QueueInfo> undoList = new ArrayList<>();
 	public static List<QueueInfo> redoList = new ArrayList<>();
-	
-	public static final Field storageArraysField;
 	
 	static {
 		Field f = null;
@@ -72,7 +38,40 @@ public class ToolHelper {
 		storageArraysField = f;
 	}
 	
-	public static void saveReplacedEntities(World world, EntityPlayer player, Selection selection, List<EntityInfo> undoEntity) {
+	public static SavedLists duplicateSavedList(SavedLists old) {
+		return new SavedLists(new ArrayList<>(old.nonBlockList),
+							  new LinkedList<>(old.blockList),
+							  null,
+							  new ArrayList<>(old.entities),
+							  new LinkedList<>(old.blocksToRemove));
+	}
+	
+	public static SavedLists createEmptySavedList() {
+		return new SavedLists(new ArrayList<>(),
+							  new LinkedList<>(),
+							  new LinkedList<>(),
+							  new ArrayList<>(),
+							  new LinkedList<>());
+	}
+	
+	public static void addSavedList(SavedLists holder, SavedLists toAdd) {
+		holder.blockList.addAll(toAdd.blockList);
+		holder.nonBlockList.addAll(toAdd.nonBlockList);
+		holder.entities.addAll(toAdd.entities);
+		holder.blocksToRemove.addAll(toAdd.blocksToRemove);
+	}
+
+	public static QueueInfo mergeQueue(QueueInfo holder, QueueInfo toMerge) {
+		addSavedList(holder.editList, toMerge.editList);
+		addSavedList(holder.undoList, toMerge.undoList);
+		addSavedList(holder.redoList, toMerge.redoList);
+		holder.selection.addAll(toMerge.selection);
+		
+		return holder;
+	}
+	
+	public static void saveReplacedEntities(World world, EntityPlayer player, Selection selection,
+			List<EntityInfo> undoEntity) {
 		for (Object o : world.getEntitiesWithinAABBExcludingEntity(player,
 																   new AxisAlignedBB(selection.pos1().x,
 																					 selection.pos1().y,
@@ -92,8 +91,9 @@ public class ToolHelper {
 														  entity.rotationPitch), entity.getClass(), nbt));
 		}
 	}
-	
-	public static void saveEntitiesToPlace(List<EntityInfo> entities, List<EntityInfo> entitiesToPaste, int x3, int y3, int z3) {
+
+	public static void saveEntitiesToPlace(List<EntityInfo> entities, List<EntityInfo> entitiesToPaste, int x3, int y3,
+			int z3) {
 		for (EntityInfo entity : entities) {
 			LocAndAngle locAndAngle = entity.locAndAngle();
 			entitiesToPaste.add(new EntityInfo(new LocAndAngle(locAndAngle.x() + x3,
@@ -105,7 +105,7 @@ public class ToolHelper {
 											   entity.nbt()));
 		}
 	}
-	
+
 	public static void copyRemoveBlockSelection(int minY, int maxY, int minX, int maxX, int minZ, int maxZ, World world,
 			List<BlockInfo> undoNonBlock, Queue<BlockInfo> undoBlock, Queue<BlockInfo> moveBlockList,
 			Queue<BlockToRemoveInfo> blocksToRemove) {
@@ -155,9 +155,9 @@ public class ToolHelper {
 			}
 		}
 	}
-	
-	public static void copyEntityInSelection(List<Entity> entitiesInSelection, List<EntityInfo> entities, int minX, int minY,
-			int minZ, List<EntityInfo> undoEntity) {
+
+	public static void copyEntityInSelection(List<Entity> entitiesInSelection, List<EntityInfo> entities, int minX,
+			int minY, int minZ, List<EntityInfo> undoEntity) {
 		for (Entity entity : entitiesInSelection) {
 			if (entity instanceof EntityPlayer) continue;
 			
@@ -176,7 +176,7 @@ public class ToolHelper {
 														  entity.rotationPitch), entity.getClass(), nbt));
 		}
 	}
-	
+
 	public static void saveBlockReplaced(World world, int x, int y, int z, List<BlockInfo> undoNonBlock,
 			Queue<BlockInfo> undoBlock) {
 		int id = world.getBlockId(x, y, z);
@@ -215,7 +215,6 @@ public class ToolHelper {
 		}*/
 	}
 	
-	
 	public static void saveBlockToPlace(BlockInfo info, int x, int y, int z, World world, List<BlockInfo> nonBlockList,
 			Queue<BlockInfo> blockList) {
 		BlockInfo pasteInfo = new BlockInfo(x, y, z, info.id(), info.meta(), info.tile());
@@ -237,7 +236,6 @@ public class ToolHelper {
 			blockList.add(pasteInfo);
 		}
 	}
-	
 	
 	public static MovingObjectPosition getBlockPlayerIsLooking(ICommandSender sender) {
 		EntityPlayer player = getPlayer(sender, sender.getCommandSenderName());
@@ -266,4 +264,20 @@ public class ToolHelper {
 	public static void sendEditMsg(ICommandSender sender, String msg) {
 		sender.sendChatToPlayer(ChatMessageComponent.createFromText("§d" + msg));
 	}
+	
+	public record BlockInfo(int x, int y, int z, int id, int meta, NBTTagCompound tile) {}
+	
+	public record BlockToRemoveInfo(int x, int y, int z, boolean hasTile) {}
+	
+	public record QueueInfo(String id, List<Selection> selection, SavedLists editList, SavedLists undoList,
+							SavedLists redoList, int[] num, EntityPlayer player) {}
+	
+	public record EntityInfo(LocAndAngle locAndAngle, Class entityClass, NBTTagCompound nbt) {}
+	
+	public record LocAndAngle(double x, double y, double z, float yaw, float pitch) {}
+	
+	public record Selection(BlockPos pos1, BlockPos pos2) {}
+	
+	public record SavedLists(List<BlockInfo> nonBlockList, Queue<BlockInfo> blockList, Queue<BlockInfo> allBlocks,
+							 List<EntityInfo> entities, Queue<BlockToRemoveInfo> blocksToRemove) {}
 }

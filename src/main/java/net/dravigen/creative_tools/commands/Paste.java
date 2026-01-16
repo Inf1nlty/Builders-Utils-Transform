@@ -3,7 +3,10 @@ package net.dravigen.creative_tools.commands;
 import api.world.BlockPos;
 import net.minecraft.src.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 
 import static net.dravigen.creative_tools.api.ToolHelper.*;
 
@@ -16,17 +19,6 @@ public class Paste extends CommandBase {
 	@Override
 	public String getCommandUsage(ICommandSender iCommandSender) {
 		return "/paste [x/y/z]";
-	}
-	
-	@Override
-	public List addTabCompletionOptions(ICommandSender sender, String[] strings) {
-		MovingObjectPosition block = getBlockPlayerIsLooking(sender);
-		
-		if (block != null && strings.length < 2) {
-			return getListOfStringsMatchingLastWord(strings, block.blockX + "/" + block.blockY + "/" + block.blockZ);
-		}
-		
-		return null;
 	}
 	
 	@Override
@@ -110,10 +102,21 @@ public class Paste extends CommandBase {
 								   duplicateSavedList(result.edit()),
 								   new int[SAVED_NUM],
 								   player));
-	
+		
 		sendEditMsg(sender,
 					StatCollector.translateToLocal("commands.prefix") +
 							StatCollector.translateToLocal("commands.paste"));
+	}
+	
+	@Override
+	public List addTabCompletionOptions(ICommandSender sender, String[] strings) {
+		MovingObjectPosition block = getBlockPlayerIsLooking(sender);
+		
+		if (block != null && strings.length < 2) {
+			return getListOfStringsMatchingLastWord(strings, block.blockX + "/" + block.blockY + "/" + block.blockZ);
+		}
+		
+		return null;
 	}
 	
 	private record Result(SavedLists edit, SavedLists undo) {}

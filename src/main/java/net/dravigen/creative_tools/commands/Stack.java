@@ -3,7 +3,10 @@ package net.dravigen.creative_tools.commands;
 import api.world.BlockPos;
 import net.minecraft.src.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 
 import static net.dravigen.creative_tools.api.ToolHelper.*;
 
@@ -16,11 +19,6 @@ public class Stack extends CommandBase {
 	@Override
 	public String getCommandUsage(ICommandSender iCommandSender) {
 		return "/stack [+x|-x|+y|-y|+z|-z] [number of stack]";
-	}
-	
-	@Override
-	public List addTabCompletionOptions(ICommandSender sender, String[] strings) {
-		return getListOfStringsMatchingLastWord(strings, "+x", "-x", "+y", "-y", "+z", "-z");
 	}
 	
 	@Override
@@ -217,13 +215,21 @@ public class Stack extends CommandBase {
 										 new ArrayList<>(undoEntity),
 										 new LinkedList<>());
 		
-		editList.add(new QueueInfo("stack", selections,
+		editList.add(new QueueInfo("stack",
+								   selections,
 								   edit,
 								   undo,
 								   duplicateSavedList(edit),
 								   new int[SAVED_NUM],
 								   player));
+		
+		sendEditMsg(sender,
+					StatCollector.translateToLocal("commands.prefix") +
+							String.format(StatCollector.translateToLocal("commands.stack"), stackNum, direction));
+	}
 	
-		sendEditMsg(sender, StatCollector.translateToLocal("commands.prefix") + String.format(StatCollector.translateToLocal("commands.stack"), stackNum, direction));
+	@Override
+	public List addTabCompletionOptions(ICommandSender sender, String[] strings) {
+		return getListOfStringsMatchingLastWord(strings, "+x", "-x", "+y", "-y", "+z", "-z");
 	}
 }

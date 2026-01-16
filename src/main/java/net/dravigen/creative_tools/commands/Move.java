@@ -3,7 +3,10 @@ package net.dravigen.creative_tools.commands;
 import api.world.BlockPos;
 import net.minecraft.src.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 
 import static net.dravigen.creative_tools.api.ToolHelper.*;
 
@@ -17,20 +20,6 @@ public class Move extends CommandBase {
 	public String getCommandUsage(ICommandSender iCommandSender) {
 		return "/move <add|to> [x/y/z]";
 	}
-	
-	@Override
-	public List addTabCompletionOptions(ICommandSender sender, String[] strings) {
-		MovingObjectPosition block = getBlockPlayerIsLooking(sender);
-		if (strings.length == 1) {
-			return getListOfStringsMatchingLastWord(strings, "to", "add");
-		}
-		if (block != null && strings.length == 2 && strings[0].equalsIgnoreCase("to")) {
-			return getListOfStringsMatchingLastWord(strings, block.blockX + "/" + block.blockY + "/" + block.blockZ);
-		}
-		
-		return null;
-	}
-	
 	
 	@Override
 	public void processCommand(ICommandSender sender, String[] strings) {
@@ -63,8 +52,7 @@ public class Move extends CommandBase {
 			int y3 = Integer.parseInt(strings[1].split("/")[1]) + (strings[0].equalsIgnoreCase("add") ? minY : 0);
 			int z3 = Integer.parseInt(strings[1].split("/")[2]) + (strings[0].equalsIgnoreCase("add") ? minZ : 0);
 			
-			Selection selection1 = new Selection(new BlockPos(minX, minY, minZ),
-												new BlockPos(maxX, maxY, maxZ));
+			Selection selection1 = new Selection(new BlockPos(minX, minY, minZ), new BlockPos(maxX, maxY, maxZ));
 			
 			
 			List<EntityInfo> entities = new ArrayList<>();
@@ -103,19 +91,19 @@ public class Move extends CommandBase {
 															   entity.rotationYaw,
 															   entity.rotationPitch), entity.getClass(), nbt));
 			}
-		
+			
 			
 			copyRemoveBlockSelection(minY,
-					  maxY,
-					  minX,
-					  maxX,
-					  minZ,
-					  maxZ,
-					  world,
-					  undoNonBlock1,
-					  undoBlock1,
-					  moveBlockList,
-					  blocksToRemove);
+									 maxY,
+									 minX,
+									 maxX,
+									 minZ,
+									 maxZ,
+									 world,
+									 undoNonBlock1,
+									 undoBlock1,
+									 moveBlockList,
+									 blocksToRemove);
 			
 			List<BlockInfo> nonBlockList = new ArrayList<>();
 			Queue<BlockInfo> blockList = new LinkedList<>();
@@ -143,8 +131,7 @@ public class Move extends CommandBase {
 				saveBlockReplaced(world, x, y, z, undoNonBlock, undoBlock);
 			}
 			
-			Selection selection2 = new Selection(new BlockPos(minX, minY, minZ),
-												new BlockPos(maxX, maxY, maxZ));
+			Selection selection2 = new Selection(new BlockPos(minX, minY, minZ), new BlockPos(maxX, maxY, maxZ));
 			
 			saveReplacedEntities(world, player, selection2, undoEntity);
 			
@@ -178,11 +165,23 @@ public class Move extends CommandBase {
 			sendEditMsg(sender,
 						StatCollector.translateToLocal("commands.prefix") +
 								StatCollector.translateToLocal("commands.move"));
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			sendErrorMsg(sender, StatCollector.translateToLocal("commands.error.error"));
 			throw new RuntimeException(e);
 		}
+	}
+	
+	@Override
+	public List addTabCompletionOptions(ICommandSender sender, String[] strings) {
+		MovingObjectPosition block = getBlockPlayerIsLooking(sender);
+		if (strings.length == 1) {
+			return getListOfStringsMatchingLastWord(strings, "to", "add");
+		}
+		if (block != null && strings.length == 2 && strings[0].equalsIgnoreCase("to")) {
+			return getListOfStringsMatchingLastWord(strings, block.blockX + "/" + block.blockY + "/" + block.blockZ);
+		}
+		
+		return null;
 	}
 }
 

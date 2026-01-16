@@ -21,17 +21,6 @@ public class PosAll extends CommandBase {
 	}
 	
 	@Override
-	public List addTabCompletionOptions(ICommandSender sender, String[] strings) {
-		MovingObjectPosition block = getBlockPlayerIsLooking(sender);
-		
-		if (block != null && strings.length < 2) {
-			return getListOfStringsMatchingLastWord(strings, block.blockX + "/" + block.blockY + "/" + block.blockZ);
-		}
-		
-		return null;
-	}
-	
-	@Override
 	public void processCommand(ICommandSender sender, String[] strings) {
 		int x1 = strings.length == 2 ? Integer.parseInt(strings[0].split("/")[0]) : pos1.x;
 		int y1 = strings.length == 2 ? Integer.parseInt(strings[0].split("/")[1]) : pos1.y;
@@ -42,6 +31,19 @@ public class PosAll extends CommandBase {
 		
 		pos1.set(x1, y1, z1);
 		pos2.set(x2, y2, z2);
-		sendEditMsg(sender, StatCollector.translateToLocal("commands.prefix") + String.format(StatCollector.translateToLocal("commands.posAll"), x1, y1, z1, x2, y2, z2));
+		sendEditMsg(sender,
+					StatCollector.translateToLocal("commands.prefix") +
+							String.format(StatCollector.translateToLocal("commands.posAll"), x1, y1, z1, x2, y2, z2));
+	}
+	
+	@Override
+	public List addTabCompletionOptions(ICommandSender sender, String[] strings) {
+		MovingObjectPosition block = getBlockPlayerIsLooking(sender);
+		
+		if (block != null && strings.length < 2) {
+			return getListOfStringsMatchingLastWord(strings, block.blockX + "/" + block.blockY + "/" + block.blockZ);
+		}
+		
+		return null;
 	}
 }

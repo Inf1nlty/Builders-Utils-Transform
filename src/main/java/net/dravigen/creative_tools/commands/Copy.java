@@ -19,17 +19,6 @@ public class Copy extends CommandBase {
 	}
 	
 	@Override
-	public List addTabCompletionOptions(ICommandSender sender, String[] strings) {
-		MovingObjectPosition block = getBlockPlayerIsLooking(sender);
-		
-		if (block != null && strings.length < 3) {
-			return getListOfStringsMatchingLastWord(strings, block.blockX + "/" + block.blockY + "/" + block.blockZ);
-		}
-		
-		return null;
-	}
-	
-	@Override
 	public void processCommand(ICommandSender sender, String[] strings) {
 		if (strings.length == 0 && (pos1 == null || pos2 == null)) {
 			sendErrorMsg(sender, StatCollector.translateToLocal("commands.error.selection2"));
@@ -80,7 +69,7 @@ public class Copy extends CommandBase {
 			entityNum++;
 		}
 		
-	
+		
 		for (int y = minY; y <= maxY; y++) {
 			for (int x = minX; x <= maxX; x++) {
 				for (int z = minZ; z <= maxZ; z++) {
@@ -105,6 +94,19 @@ public class Copy extends CommandBase {
 			}
 		}
 		
-		sendEditMsg(sender, StatCollector.translateToLocal("commands.prefix") + String.format(StatCollector.translateToLocal("commands.copy"), blockNum, entityNum));
+		sendEditMsg(sender,
+					StatCollector.translateToLocal("commands.prefix") +
+							String.format(StatCollector.translateToLocal("commands.copy"), blockNum, entityNum));
+	}
+	
+	@Override
+	public List addTabCompletionOptions(ICommandSender sender, String[] strings) {
+		MovingObjectPosition block = getBlockPlayerIsLooking(sender);
+		
+		if (block != null && strings.length < 3) {
+			return getListOfStringsMatchingLastWord(strings, block.blockX + "/" + block.blockY + "/" + block.blockZ);
+		}
+		
+		return null;
 	}
 }

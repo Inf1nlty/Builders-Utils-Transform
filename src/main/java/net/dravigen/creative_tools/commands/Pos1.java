@@ -18,6 +18,19 @@ public class Pos1 extends CommandBase {
 	}
 	
 	@Override
+	public void processCommand(ICommandSender sender, String[] strings) {
+		EntityPlayer player = getPlayer(sender, sender.getCommandSenderName());
+		int x = strings.length == 1 ? Integer.parseInt(strings[0].split("/")[0]) : MathHelper.floor_double(player.posX);
+		int y = strings.length == 1 ? Integer.parseInt(strings[0].split("/")[1]) : MathHelper.floor_double(player.posY);
+		int z = strings.length == 1 ? Integer.parseInt(strings[0].split("/")[2]) : MathHelper.floor_double(player.posZ);
+		
+		pos1.set(x, y, z);
+		sendEditMsg(sender,
+					StatCollector.translateToLocal("commands.prefix") +
+							String.format(StatCollector.translateToLocal("commands.pos1"), x, y, z));
+	}
+	
+	@Override
 	public List addTabCompletionOptions(ICommandSender sender, String[] strings) {
 		MovingObjectPosition block = getBlockPlayerIsLooking(sender);
 		
@@ -26,16 +39,5 @@ public class Pos1 extends CommandBase {
 		}
 		
 		return null;
-	}
-	
-	@Override
-	public void processCommand(ICommandSender sender, String[] strings) {
-		EntityPlayer player = getPlayer(sender, sender.getCommandSenderName());
-		int x = strings.length == 1 ? Integer.parseInt(strings[0].split("/")[0]) : MathHelper.floor_double(player.posX);
-		int y = strings.length == 1 ? Integer.parseInt(strings[0].split("/")[1]) : MathHelper.floor_double(player.posY);
-		int z = strings.length == 1 ? Integer.parseInt(strings[0].split("/")[2]) : MathHelper.floor_double(player.posZ);
-		
-		pos1.set(x, y, z);
-		sendEditMsg(sender, StatCollector.translateToLocal("commands.prefix") + String.format(StatCollector.translateToLocal("commands.pos1"), x, y, z));
 	}
 }
