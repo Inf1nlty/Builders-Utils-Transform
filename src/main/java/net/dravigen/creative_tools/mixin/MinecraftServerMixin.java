@@ -1,19 +1,15 @@
 package net.dravigen.creative_tools.mixin;
 
-import api.world.BlockPos;
 import net.dravigen.creative_tools.api.HelperCommand;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.src.*;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
@@ -33,40 +29,43 @@ public abstract class MinecraftServerMixin {
 			
 			World world = queueInfo.player().getEntityWorld();
 			
-			List<BlockInfo> nonBlockList = queueInfo.nonBlockList();
-			Queue<BlockInfo> blockList = queueInfo.blockList();
-			Queue<BlockInfo> allBlocks = queueInfo.allBlocks();
-			Queue<BlockToRemoveInfo> removeList = queueInfo.blocksToRemove();
-			List<EntityInfo> entities = queueInfo.entities();
+			SavedLists edit = queueInfo.editList();
+			SavedLists undo = queueInfo.undoList();
+			
+			List<BlockInfo> nonBlockList = edit.nonBlockList();
+			Queue<BlockInfo> blockList = edit.blockList();
+			Queue<BlockInfo> allBlocks = edit.allBlocks();
+			Queue<BlockToRemoveInfo> removeList = edit.blocksToRemove();
+			List<EntityInfo> entities = edit.entities();
+			
 			boolean isEntitiesEmpty = entities == null || entities.isEmpty();
 			boolean isBlockEmpty = blockList == null || blockList.isEmpty();
 			boolean isNonBlockEmpty = nonBlockList == null || nonBlockList.isEmpty();
 			Selection selection = queueInfo.selection();
-			boolean savedUndo = queueInfo.savedUndo();
+			boolean savedUndo = queueInfo.savedUndo() || queueInfo.id().equals("undo");
 			
 			int[] num = queueInfo.num();
 			
+			int totalEdit = num[0] + num[1] + num[2] + num[3];
 			for (Object o : world.getEntitiesWithinAABBExcludingEntity(queueInfo.player(),
 																	   new AxisAlignedBB(selection.pos1().x,
 																						 selection.pos1().y,
 																						 selection.pos1().z,
-																						 selection.pos2().x +
-																								 1,
-																						 selection.pos2().y +
-																								 1,
-																						 selection.pos2().z +
-																								 1))) {
+																						 selection.pos2().x + 1,
+																						 selection.pos2().y + 1,
+																						 selection.pos2().z + 1))) {
 				Entity entity = (Entity) o;
 				if (entity instanceof EntityPlayer) continue;
 				
-				if (!savedUndo) {
+				if (!savedUndo && totalEdit == 0) {
 					NBTTagCompound nbt = new NBTTagCompound();
 					entity.writeToNBT(nbt);
-					queueInfo.undo().entities().add(new EntityInfo(new LocAndAngle(entity.posX,
-																	  entity.posY,
-																	  entity.posZ,
-																	  entity.rotationYaw,
-																	  entity.rotationPitch), entity.getClass(), nbt));
+					undo.entities()
+							.add(new EntityInfo(new LocAndAngle(entity.posX,
+																entity.posY,
+																entity.posZ,
+																entity.rotationYaw,
+																entity.rotationPitch), entity.getClass(), nbt));
 				}
 				
 				entity.setDead();
@@ -79,10 +78,6 @@ public abstract class MinecraftServerMixin {
 						int x = info.x();
 						int y = info.y();
 						int z = info.z();
-						
-						if (world.isAirBlock(x, y, z)) {
-							continue;
-						}
 						
 						int id = world.getBlockId(x, y, z);
 						int meta = world.getBlockMetadata(x, y, z);
@@ -107,14 +102,14 @@ public abstract class MinecraftServerMixin {
 									block instanceof BlockFluid ||
 									block.isFallingBlock() ||
 									!block.canPlaceBlockAt(world, 0, 254, 0))) {
-								queueInfo.undo().nonBlockList().add(pasteInfo);
+								undo.nonBlockList().add(pasteInfo);
 							}
 							else {
-								queueInfo.undo().blockList().add(pasteInfo);
+								undo.blockList().add(pasteInfo);
 							}
 						}
 						else {
-							queueInfo.undo().blockList().add(pasteInfo);
+							undo.blockList().add(pasteInfo);
 						}
 					}
 				}
@@ -145,14 +140,14 @@ public abstract class MinecraftServerMixin {
 										block instanceof BlockFluid ||
 										block.isFallingBlock() ||
 										!block.canPlaceBlockAt(world, 0, 254, 0))) {
-									queueInfo.undo().nonBlockList().add(pasteInfo);
+									undo.nonBlockList().add(pasteInfo);
 								}
 								else {
-									queueInfo.undo().blockList().add(pasteInfo);
+									undo.blockList().add(pasteInfo);
 								}
 							}
 							else {
-								queueInfo.undo().blockList().add(pasteInfo);
+								undo.blockList().add(pasteInfo);
 							}
 						}
 					}
@@ -273,9 +268,17 @@ public abstract class MinecraftServerMixin {
 				}
 			}
 			
-			editList.set(editList.indexOf(queueInfo), new QueueInfo(selection, queueInfo.nonBlockList(), queueInfo.blockList(), allBlocks, queueInfo.entities(), queueInfo.blocksToRemove(),
-																	queueInfo.minY(), num, queueInfo.player(), true, queueInfo.undo()));
-			
+			editList.set(editList.indexOf(queueInfo),
+						 new QueueInfo(queueInfo.id(),
+									   selection,
+									   edit,
+									   undo,
+									   queueInfo.redoList(),
+									   queueInfo.minY(),
+									   num,
+									   queueInfo.player(),
+									   true));
+		
 			if (removeList.isEmpty() && isNonBlockEmpty && isBlockEmpty && allBlocks.isEmpty()) {
 				if (!isEntitiesEmpty) {
 					for (Object o : world.getEntitiesWithinAABBExcludingEntity(queueInfo.player(),
@@ -322,12 +325,20 @@ public abstract class MinecraftServerMixin {
 					}
 				}
 				
-				if ((num[0] + num[1] + num[2] + num[3]) > 0) {
-					if (queueInfo.undo() != null) {
-						undoList.add(queueInfo.undo());
+				if (totalEdit > 0) {
+					if (!queueInfo.id().equals("undo")) {
+						undoList.add(new QueueInfo("undo",
+												   selection,
+												   duplicateSavedList(undo),
+												   createEmptySavedList(),
+												   duplicateSavedList(queueInfo.redoList()),
+												   queueInfo.minY(),
+												   new int[SAVED_NUM],
+												   queueInfo.player(),
+												   true));
 					}
 					
-					HelperCommand.sendEditMsg(queueInfo.player(), StatCollector.translateToLocal("commands.prefix") + String.format(StatCollector.translateToLocal("commands.edit"), num[0] + num[2], num[1] + num[3], num[0], num[2], num[1], num[3]));
+					HelperCommand.sendEditMsg(queueInfo.player(), String.format(StatCollector.translateToLocal("commands.edit"), num[0] + num[2], num[1] + num[3], num[0], num[2], num[1], num[3]));
 				}
 				else {
 					HelperCommand.sendErrorMsg(queueInfo.player(), String.format(StatCollector.translateToLocal("commands.error.edit")));

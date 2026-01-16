@@ -11,10 +11,19 @@ import static net.minecraft.src.CommandBase.getPlayer;
 public class ToolHelper {
 	public record BlockInfo(int x, int y, int z, int id, int meta, NBTTagCompound tile) {}
 	public record BlockToRemoveInfo(int x, int y, int z, boolean hasTile) {}
-	public record QueueInfo(Selection selection, List<BlockInfo> nonBlockList, Queue<BlockInfo> blockList, Queue<BlockInfo> allBlocks, List<EntityInfo> entities, Queue<BlockToRemoveInfo> blocksToRemove, int minY, int[] num, EntityPlayer player, boolean savedUndo, QueueInfo undo) {}
+	public record QueueInfo(String id, Selection selection, SavedLists editList, SavedLists undoList, SavedLists redoList, int minY, int[] num, EntityPlayer player, boolean savedUndo) {}
 	public record EntityInfo(LocAndAngle locAndAngle, Class entityClass, NBTTagCompound nbt) {}
 	public record LocAndAngle(double x, double y, double z, float yaw, float pitch) {}
 	public record Selection(BlockPos pos1, BlockPos pos2) {}
+	public record SavedLists(List<BlockInfo> nonBlockList, Queue<BlockInfo> blockList, Queue<BlockInfo> allBlocks, List<EntityInfo> entities, Queue<BlockToRemoveInfo> blocksToRemove) {}
+	
+	public static SavedLists duplicateSavedList(SavedLists old) {
+		return new SavedLists(new ArrayList<>(old.nonBlockList), new LinkedList<>(old.blockList), new LinkedList<>(old.allBlocks), new ArrayList<>(old.entities), new LinkedList<>(old.blocksToRemove));
+	}
+	
+	public static SavedLists createEmptySavedList() {
+		return new SavedLists(new ArrayList<>(), new LinkedList<>(), new LinkedList<>(), new ArrayList<>(), new LinkedList<>());
+	}
 	
 	public static int SAVED_NUM = 4;
 	
@@ -25,6 +34,7 @@ public class ToolHelper {
 	public static List<EntityInfo> copyEntityList = new ArrayList<>();
 	public static List<QueueInfo> editList = new ArrayList<>();
 	public static List<QueueInfo> undoList = new ArrayList<>();
+	public static List<QueueInfo> redoList = new ArrayList<>();
 	
 	public static final Field storageArraysField;
 	
@@ -60,6 +70,92 @@ public class ToolHelper {
 			inv.setInventorySlotContents(k, null);
 		}
 	}
+	
+	public static SavedLists createUndoList(World world, Selection selection, Queue<BlockToRemoveInfo> removeList) {
+		List<BlockInfo> nonBlockList = new ArrayList<>();
+		Queue<BlockInfo> blockList = new LinkedList<>();
+		
+		if (!removeList.isEmpty()) {
+			for (BlockToRemoveInfo info : removeList) {
+				int x = info.x();
+				int y = info.y();
+				int z = info.z();
+				
+				int id = world.getBlockId(x, y, z);
+				int meta = world.getBlockMetadata(x, y, z);
+				TileEntity tile = world.getBlockTileEntity(x, y, z);
+				
+				NBTTagCompound tileNBT = null;
+				
+				if (tile != null) {
+					tileNBT = new NBTTagCompound();
+					tile.writeToNBT(tileNBT);
+					tileNBT.removeTag("x");
+					tileNBT.removeTag("y");
+					tileNBT.removeTag("z");
+				}
+				
+				BlockInfo pasteInfo = new BlockInfo(x, y, z, id, meta, tileNBT);
+				
+				Block block = Block.blocksList[id];
+				
+				if (block != null) {
+					if ((!block.canPlaceBlockOnSide(world, 0, 254, 0, 1) ||
+							block instanceof BlockFluid ||
+							block.isFallingBlock() ||
+							!block.canPlaceBlockAt(world, 0, 254, 0))) {
+						nonBlockList.add(pasteInfo);
+					}
+					else {
+						blockList.add(pasteInfo);
+					}
+				}
+				else {
+					blockList.add(pasteInfo);
+				}
+			}
+		}
+		
+		for (int y = selection.pos1().y; y <= selection.pos2().y; y++) {
+			for (int x = selection.pos1().x; x <= selection.pos2().x; x++) {
+				for (int z = selection.pos1().z; z <= selection.pos2().z; z++) {
+					int id = world.getBlockId(x, y, z);
+					int meta = world.getBlockMetadata(x, y, z);
+					TileEntity tile = world.getBlockTileEntity(x, y, z);
+					
+					NBTTagCompound tileNBT = null;
+					
+					if (tile != null) {
+						tileNBT = new NBTTagCompound();
+						tile.writeToNBT(tileNBT);
+						tileNBT.removeTag("x");
+						tileNBT.removeTag("y");
+						tileNBT.removeTag("z");
+					}
+					
+					BlockInfo pasteInfo = new BlockInfo(x, y, z, id, meta, tileNBT);
+					
+					Block block = Block.blocksList[id];
+					
+					if (block != null) {
+						if ((!block.canPlaceBlockOnSide(world, 0, 254, 0, 1) ||
+								block instanceof BlockFluid ||
+								block.isFallingBlock() ||
+								!block.canPlaceBlockAt(world, 0, 254, 0))) {
+							nonBlockList.add(pasteInfo);
+						}
+						else {
+							blockList.add(pasteInfo);
+						}
+					}
+					else {
+						blockList.add(pasteInfo);
+					}
+				}
+			}
+		}
+	}
+	
 	
 	/*
 	public static void removeBlock(World world, int x, int z, int y, boolean hasTile) {

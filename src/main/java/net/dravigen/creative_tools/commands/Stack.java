@@ -36,6 +36,7 @@ public class Stack extends CommandBase {
 			return;
 		}
 		
+		redoList.clear();
 		World world = sender.getEntityWorld();
 		EntityPlayer player = getPlayer(sender, sender.getCommandSenderName());
 		
@@ -53,7 +54,7 @@ public class Stack extends CommandBase {
 				Integer.parseInt(strings[0]);
 				
 				direction = "eye";
-			} catch (Exception e) {
+			} catch (Exception ignored) {
 			}
 		}
 		
@@ -228,28 +229,20 @@ public class Stack extends CommandBase {
 			}
 		}
 		
+		SavedLists edit = new SavedLists(new ArrayList<>(nonBlockList),
+										 new LinkedList<>(blockList),
+										 new LinkedList<>(),
+										 new ArrayList<>(entities),
+										 new LinkedList<>());
 		Selection selection = new Selection(new BlockPos(minX, minY, minZ), new BlockPos(maxX, maxY, maxZ));
-		editList.add(new QueueInfo(selection,
-								   nonBlockList,
-								   blockList,
-								   new LinkedList<>(),
-								   entitiesToPaste,
-								   new LinkedList<>(),
+		editList.add(new QueueInfo("stack", selection,
+								   edit,
+								   createEmptySavedList(),
+								   duplicateSavedList(edit),
 								   minY,
 								   new int[SAVED_NUM],
 								   player,
-								   false,
-								   new QueueInfo(selection,
-												 undoNonBlock,
-												 undoBlock,
-												 new LinkedList<>(),
-												 undoEntity,
-												 new LinkedList<>(),
-												 minY,
-												 new int[SAVED_NUM],
-												 player,
-												 true,
-												 null)));
+								   false));
 	
 		sendEditMsg(sender, StatCollector.translateToLocal("commands.prefix") + String.format(StatCollector.translateToLocal("commands.stack"), stackNum, direction));
 	}

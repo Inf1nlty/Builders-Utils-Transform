@@ -44,6 +44,7 @@ public class Paste extends CommandBase {
 			return;
 		}
 		
+		redoList.clear();
 		EntityPlayer player = getPlayer(sender, sender.getCommandSenderName());
 		World world = sender.getEntityWorld();
 		
@@ -60,7 +61,6 @@ public class Paste extends CommandBase {
 		List<BlockInfo> pasteNonBlockList = new ArrayList<>();
 		Queue<BlockInfo> pasteBlockList = new LinkedList<>();
 		List<EntityInfo> entities = new ArrayList<>();
-		Queue<BlockToRemoveInfo> blocksToRemove = new LinkedList<>();
 		
 		int minX = Integer.MAX_VALUE;
 		int minY = Integer.MAX_VALUE;
@@ -116,26 +116,19 @@ public class Paste extends CommandBase {
 					StatCollector.translateToLocal("commands.prefix") +
 							StatCollector.translateToLocal("commands.paste"));
 		Selection selection = new Selection(new BlockPos(minX, minY, minZ), new BlockPos(maxX, maxY, maxZ));
-		editList.add(new QueueInfo(selection,
-								   pasteNonBlockList,
-								   pasteBlockList,
-								   new LinkedList<>(),
-								   entities,
-								   blocksToRemove,
+		SavedLists edit = new SavedLists(new ArrayList<>(pasteNonBlockList),
+										 new LinkedList<>(pasteBlockList),
+										 new LinkedList<>(),
+										 new ArrayList<>(entities),
+										 new LinkedList<>());
+		editList.add(new QueueInfo("paste",
+								   selection,
+								   edit,
+								   createEmptySavedList(),
+								   duplicateSavedList(edit),
 								   yLoc,
 								   new int[SAVED_NUM],
 								   player,
-								   false,
-								   new QueueInfo(selection,
-												 new ArrayList<>(),
-												 new LinkedList<>(),
-												 new LinkedList<>(),
-												 new ArrayList<>(),
-												 new LinkedList<>(),
-												 minY,
-												 new int[SAVED_NUM],
-												 player,
-												 true,
-												 null)));
+								   false));
 	}
 }

@@ -43,6 +43,7 @@ public class Remove extends CommandBase {
 			return;
 		}
 		
+		redoList.clear();
 		World world = sender.getEntityWorld();
 		EntityPlayer player = getPlayer(sender, sender.getCommandSenderName());
 		
@@ -72,17 +73,22 @@ public class Remove extends CommandBase {
 			}
 		}
 		
-		sendEditMsg(sender, StatCollector.translateToLocal("commands.prefix") +StatCollector.translateToLocal("commands.remove"));
-		editList.add(new QueueInfo(selection, new ArrayList<>(), new LinkedList<>(), new LinkedList<>(), new ArrayList<>(), blocksToRemove, minY, new int[SAVED_NUM], player, false, new QueueInfo(selection,
-																																																   new ArrayList<>(),
-																																																   new LinkedList<>(),
-																																																   new LinkedList<>(),
-																																																   new ArrayList<>(),
-																																																   new LinkedList<>(),
-																																																   minY,
-																																																   new int[SAVED_NUM],
-																																																   player,
-																																																   true,
-																																																   null)));
+		sendEditMsg(sender,
+					StatCollector.translateToLocal("commands.prefix") +
+							StatCollector.translateToLocal("commands.remove"));
+		SavedLists edit = new SavedLists(new ArrayList<>(),
+										 new LinkedList<>(),
+										 new LinkedList<>(),
+										 new ArrayList<>(),
+										 new LinkedList<>(blocksToRemove));
+		editList.add(new QueueInfo("remove",
+								   selection,
+								   edit,
+								   createEmptySavedList(),
+								   duplicateSavedList(edit),
+								   minY,
+								   new int[SAVED_NUM],
+								   player,
+								   false));
 	}
 }

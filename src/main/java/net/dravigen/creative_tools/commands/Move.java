@@ -41,6 +41,7 @@ public class Move extends CommandBase {
 				return;
 			}
 			
+			redoList.clear();
 			World world = sender.getEntityWorld();
 			EntityPlayer player = getPlayer(sender, sender.getCommandSenderName());
 			
@@ -189,27 +190,19 @@ public class Move extends CommandBase {
 			
 			Selection selection = new Selection(new BlockPos(minX, minY, minZ),
 												new BlockPos(maxX, maxY, maxZ));
-			editList.add(new QueueInfo(selection,
-									   nonBlockList,
-									   blockList,
-									   new LinkedList<>(),
-									   entities,
-									   blocksToRemove,
+			SavedLists edit = new SavedLists(new ArrayList<>(nonBlockList),
+											 new LinkedList<>(blockList),
+											 new LinkedList<>(),
+											 new ArrayList<>(entities),
+											 new LinkedList<>(blocksToRemove));
+			editList.add(new QueueInfo("move", selection,
+									   edit,
+									   createEmptySavedList(),
+									   duplicateSavedList(edit),
 									   minY,
 									   new int[SAVED_NUM],
 									   player,
-									   false,
-									   new QueueInfo(selection,
-													 undoNonBlock,
-													 undoBlock,
-													 new LinkedList<>(),
-													 undoEntity,
-													 new LinkedList<>(),
-													 minY,
-													 new int[SAVED_NUM],
-													 player,
-													 true,
-													 null)));
+									   false));
 			
 			sendEditMsg(sender,
 						StatCollector.translateToLocal("commands.prefix") +

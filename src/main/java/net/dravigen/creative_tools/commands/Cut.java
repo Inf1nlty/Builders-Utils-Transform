@@ -46,6 +46,7 @@ public class Cut extends CommandBase {
 			return;
 		}
 		
+		redoList.clear();
 		copyBlockList.clear();
 		copyEntityList.clear();
 		
@@ -145,26 +146,19 @@ public class Cut extends CommandBase {
 		
 		sendEditMsg(sender,
 					StatCollector.translateToLocal("commands.prefix") + StatCollector.translateToLocal("commands.cut"));
-		editList.add(new QueueInfo(selection,
-								   new ArrayList<>(),
-								   new LinkedList<>(),
-								   new LinkedList<>(),
-								   new ArrayList<>(),
-								   blocksToRemove,
+		SavedLists edit = new SavedLists(new ArrayList<>(),
+										 new LinkedList<>(),
+										 new LinkedList<>(),
+										 new ArrayList<>(),
+										 new LinkedList<>(blocksToRemove));
+		editList.add(new QueueInfo("cut", selection,
+								   edit,
+								   createEmptySavedList(),
+								   duplicateSavedList(edit),
 								   minY,
 								   new int[SAVED_NUM],
 								   player,
-								   true,
-								   new QueueInfo(selection,
-												 undoNonBlock,
-												 undoBlock,
-												 new LinkedList<>(),
-												 undoEntity,
-												 new LinkedList<>(),
-												 minY,
-												 new int[SAVED_NUM],
-												 player,
-												 true,
-												 null)));
+								   true));
+		
 	}
 }

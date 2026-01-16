@@ -25,8 +25,18 @@ public class Undo extends CommandBase {
 		
 		for (int i = 0; i < num; i++) {
 			if (!undoList.isEmpty()) {
-				editList.add(undoList.get(undoList.size() - 1));
+				QueueInfo queueInfo = undoList.get(undoList.size() - 1);
+				editList.add(queueInfo);
 				undoList.remove(undoList.size() - 1);
+				redoList.add(new QueueInfo("redo",
+										   queueInfo.selection(),
+										   duplicateSavedList(queueInfo.redoList()),
+										   duplicateSavedList(queueInfo.editList()),
+										   duplicateSavedList(queueInfo.redoList()),
+										   queueInfo.minY(),
+										   new int[SAVED_NUM],
+										   queueInfo.player(),
+										   true));
 				
 				sendEditMsg(sender,
 							StatCollector.translateToLocal("commands.prefix") +
