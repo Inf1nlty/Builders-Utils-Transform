@@ -33,8 +33,8 @@ public abstract class EntityClientPlayerMPMixin extends EntityPlayer{
 		if (heldItem == null) return;
 		
 		if (heldItem.getItem() == Item.axeWood && this.capabilities.isCreativeMode){
-			String pos1 =StatCollector.translateToLocal("commands.prefix") + StatCollector.translateToLocal("commands.pos1");
-			String pos2 =StatCollector.translateToLocal("commands.prefix") + StatCollector.translateToLocal("commands.pos2");
+			String pos1 = StatCollector.translateToLocal("commands.prefix") + StatCollector.translateToLocal("commands.pos1");
+			String pos2 = StatCollector.translateToLocal("commands.prefix") + StatCollector.translateToLocal("commands.pos2");
 			
 			if (Mouse.isButtonDown(0) || Mouse.isButtonDown(1) || Mouse.isButtonDown(2)) {
 				if (!pressed && Minecraft.getMinecraft().currentScreen == null) {
@@ -78,6 +78,6 @@ public abstract class EntityClientPlayerMPMixin extends EntityPlayer{
 	
 	@Unique
 	private static @NotNull String getBlockInfos(BlockPos pos, String s) {
-		return s + " (" + pos.x + ", " + pos.y + ", " + pos.z + ")";
+		return String.format(s, pos.x, pos.y, pos.z);
 	}
 }

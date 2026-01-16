@@ -4,21 +4,24 @@ import api.world.BlockPos;
 import net.dravigen.creative_tools.api.HelperCommand;
 import net.minecraft.src.*;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
+import static net.dravigen.creative_tools.api.HelperCommand.sendEditMsg;
 import static net.dravigen.creative_tools.api.ToolHelper.*;
-import static net.dravigen.creative_tools.api.HelperCommand.*;
+import static net.dravigen.creative_tools.api.ToolHelper.SAVED_NUM;
 
-public class Copy extends CommandBase {
-	
+public class Remove extends CommandBase {
 	@Override
 	public String getCommandName() {
-		return "copy";
+		return "remove";
 	}
 	
 	@Override
 	public String getCommandUsage(ICommandSender iCommandSender) {
-		return "/copy [x1/y1/z1] [x2/y2/z2]";
+		return "/remove [x1/y1/z1] [x2/y2/z2]";
 	}
 	
 	@Override
@@ -40,9 +43,6 @@ public class Copy extends CommandBase {
 			return;
 		}
 		
-		copyBlockList.clear();
-		copyEntityList.clear();
-		
 		World world = sender.getEntityWorld();
 		EntityPlayer player = getPlayer(sender, sender.getCommandSenderName());
 		
@@ -60,49 +60,29 @@ public class Copy extends CommandBase {
 		int maxY = Math.max(y1, y2);
 		int maxZ = Math.max(z1, z2);
 		
-		int blockNum = 0;
-		int entityNum = 0;
+		Selection selection = new Selection(new BlockPos(minX, minY, minZ), new BlockPos(maxX, maxY, maxZ));
 		
-		List<Entity> entitiesInSelection = world.getEntitiesWithinAABBExcludingEntity(player, new AxisAlignedBB(minX, minY, minZ, maxX + 1, maxY + 1, maxZ + 1));
-		
-		if (!entitiesInSelection.isEmpty()) {
-			for (Entity entity : entitiesInSelection) {
-				if (entity instanceof EntityPlayer) continue;
-				NBTTagCompound nbt = new NBTTagCompound();
-				entity.writeToNBT(nbt);
-				copyEntityList.add(new EntityInfo(new LocAndAngle(entity.posX - minX,
-															entity.posY - minY,
-															entity.posZ - minZ,
-															entity.rotationYaw,
-															entity.rotationPitch), entity.getClass(), nbt));
-				entityNum++;
-			}
-		}
+		Queue<BlockToRemoveInfo> blocksToRemove = new LinkedList<>();
 		
 		for (int y = minY; y <= maxY; y++) {
 			for (int x = minX; x <= maxX; x++) {
 				for (int z = minZ; z <= maxZ; z++) {
-					int id = world.getBlockId(x, y, z);
-					int meta = world.getBlockMetadata(x, y, z);
-					TileEntity tile = world.getBlockTileEntity(x, y, z);
-					
-					NBTTagCompound tileNBT = null;
-					
-					if (tile != null) {
-						tileNBT = new NBTTagCompound();
-						tile.writeToNBT(tileNBT);
-						tileNBT.removeTag("x");
-						tileNBT.removeTag("y");
-						tileNBT.removeTag("z");
-					}
-					
-					copyBlockList.add(new BlockInfo(x - minX, y - minY, z - minZ, id, meta, tileNBT));
-					
-					blockNum++;
+					blocksToRemove.add(new BlockToRemoveInfo(x, y, z, world.blockHasTileEntity(x, y, z)));
 				}
 			}
 		}
 		
-		sendEditMsg(sender, StatCollector.translateToLocal("commands.prefix") + String.format(StatCollector.translateToLocal("commands.copy"), blockNum, entityNum));
+		sendEditMsg(sender, StatCollector.translateToLocal("commands.prefix") +StatCollector.translateToLocal("commands.remove"));
+		editList.add(new QueueInfo(selection, new ArrayList<>(), new LinkedList<>(), new LinkedList<>(), new ArrayList<>(), blocksToRemove, minY, new int[SAVED_NUM], player, false, new QueueInfo(selection,
+																																																   new ArrayList<>(),
+																																																   new LinkedList<>(),
+																																																   new LinkedList<>(),
+																																																   new ArrayList<>(),
+																																																   new LinkedList<>(),
+																																																   minY,
+																																																   new int[SAVED_NUM],
+																																																   player,
+																																																   true,
+																																																   null)));
 	}
 }

@@ -11,10 +11,12 @@ import static net.minecraft.src.CommandBase.getPlayer;
 public class ToolHelper {
 	public record BlockInfo(int x, int y, int z, int id, int meta, NBTTagCompound tile) {}
 	public record BlockToRemoveInfo(int x, int y, int z, boolean hasTile) {}
-	public record QueueInfo(Selection selection, List<BlockInfo> nonBlockList, Queue<BlockInfo> blockList, Queue<BlockInfo> allBlocks, List<EntityInfo> entities, Queue<BlockToRemoveInfo> blocksToRemove, int minY, int num, EntityPlayer player) {}
+	public record QueueInfo(Selection selection, List<BlockInfo> nonBlockList, Queue<BlockInfo> blockList, Queue<BlockInfo> allBlocks, List<EntityInfo> entities, Queue<BlockToRemoveInfo> blocksToRemove, int minY, int[] num, EntityPlayer player, boolean savedUndo, QueueInfo undo) {}
 	public record EntityInfo(LocAndAngle locAndAngle, Class entityClass, NBTTagCompound nbt) {}
 	public record LocAndAngle(double x, double y, double z, float yaw, float pitch) {}
 	public record Selection(BlockPos pos1, BlockPos pos2) {}
+	
+	public static int SAVED_NUM = 4;
 	
 	public static BlockPos pos1 = null;
 	public static BlockPos pos2 = null;
@@ -22,7 +24,7 @@ public class ToolHelper {
 	public static List<BlockInfo> copyBlockList = new ArrayList<>();
 	public static List<EntityInfo> copyEntityList = new ArrayList<>();
 	public static List<QueueInfo> editList = new ArrayList<>();
-	
+	public static List<QueueInfo> undoList = new ArrayList<>();
 	
 	public static final Field storageArraysField;
 	

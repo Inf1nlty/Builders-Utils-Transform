@@ -6,6 +6,7 @@ import net.minecraft.src.*;
 
 import java.util.*;
 
+import static net.dravigen.creative_tools.api.HelperCommand.sendEditMsg;
 import static net.dravigen.creative_tools.api.ToolHelper.*;
 
 public class Move extends CommandBase {
@@ -74,9 +75,19 @@ public class Move extends CommandBase {
 			
 			List<EntityInfo> entities = new ArrayList<>();
 			
-			List<Entity> entitiesInSelection = world.getEntitiesWithinAABBExcludingEntity(player, new AxisAlignedBB(minX, minY, minZ, maxX, maxY, maxZ));
+			List<Entity> entitiesInSelection = world.getEntitiesWithinAABBExcludingEntity(player,
+																						  new AxisAlignedBB(minX,
+																											minY,
+																											minZ,
+																											maxX,
+																											maxY,
+																											maxZ));
 			Queue<BlockToRemoveInfo> blocksToRemove = new LinkedList<>();
 			Queue<BlockInfo> moveBlockList = new LinkedList<>();
+			
+			List<BlockInfo> undoNonBlock = new ArrayList<>();
+			Queue<BlockInfo> undoBlock = new LinkedList<>();
+			List<EntityInfo> undoEntity = new ArrayList<>();
 			
 			if (!entitiesInSelection.isEmpty()) {
 				for (Entity entity : entitiesInSelection) {
@@ -89,7 +100,12 @@ public class Move extends CommandBase {
 																entity.posZ - minZ + z3,
 																entity.rotationYaw,
 																entity.rotationPitch), entity.getClass(), nbt));
-					entity.setDead();
+					
+					undoEntity.add(new EntityInfo(new LocAndAngle(entity.posX,
+																  entity.posY,
+																  entity.posZ,
+																  entity.rotationYaw,
+																  entity.rotationPitch), entity.getClass(), nbt));
 				}
 			}
 			
@@ -110,11 +126,28 @@ public class Move extends CommandBase {
 							nbt.removeTag("z");
 						}
 						
+						BlockInfo pasteInfo = new BlockInfo(x, y, z, id, meta, nbt);
+						
+						Block block = Block.blocksList[id];
+						
+						if (block != null) {
+							if ((!block.canPlaceBlockOnSide(world, 0, 254, 0, 1) ||
+									block instanceof BlockFluid ||
+									block.isFallingBlock() ||
+									!block.canPlaceBlockAt(world, 0, 254, 0))) {
+								undoNonBlock.add(pasteInfo);
+							}
+							else {
+								undoBlock.add(pasteInfo);
+							}
+						}
+						else {
+							undoBlock.add(pasteInfo);
+						}
+						
 						moveBlockList.add(new BlockInfo(x - minX, y - minY, z - minZ, id, meta, nbt));
 						
-						if (id != 0) {
-							blocksToRemove.add(new BlockToRemoveInfo(x, y, z, tile != null));
-						}
+						blocksToRemove.add(new BlockToRemoveInfo(x, y, z, tile != null));
 					}
 				}
 			}
@@ -127,15 +160,12 @@ public class Move extends CommandBase {
 				int y = info.y() + y3;
 				int z = info.z() + z3;
 				
-				int id = world.getBlockId(x, y, z);
-				int meta = world.getBlockMetadata(x, y, z);
-				boolean hasTile = world.blockHasTileEntity(x, y, z);
-				
-				if (!hasTile && id == info.id() && meta == info.meta()) continue;
-				
-				if (id != 0) {
-					blocksToRemove.add(new BlockToRemoveInfo(x, y, z, hasTile));
-				}
+				minX = Math.min(minX, x);
+				minY = Math.min(minY, y);
+				minZ = Math.min(minZ, z);
+				maxX = Math.max(maxX, x);
+				maxY = Math.max(maxY, y);
+				maxZ = Math.max(maxZ, z);
 				
 				BlockInfo pasteInfo = new BlockInfo(x, y, z, info.id(), info.meta(), info.tile());
 				
@@ -152,9 +182,38 @@ public class Move extends CommandBase {
 						blockList.add(pasteInfo);
 					}
 				}
+				else {
+					blockList.add(pasteInfo);
+				}
 			}
 			
-			editList.add(new QueueInfo(new Selection(new BlockPos(minX + x3, minY + y3, minZ + z3), new BlockPos(maxX + x3, maxY + y3, maxZ + z3)), nonBlockList, blockList, new LinkedList<>(), entities, blocksToRemove, minY, 0, player));
+			Selection selection = new Selection(new BlockPos(minX, minY, minZ),
+												new BlockPos(maxX, maxY, maxZ));
+			editList.add(new QueueInfo(selection,
+									   nonBlockList,
+									   blockList,
+									   new LinkedList<>(),
+									   entities,
+									   blocksToRemove,
+									   minY,
+									   new int[SAVED_NUM],
+									   player,
+									   false,
+									   new QueueInfo(selection,
+													 undoNonBlock,
+													 undoBlock,
+													 new LinkedList<>(),
+													 undoEntity,
+													 new LinkedList<>(),
+													 minY,
+													 new int[SAVED_NUM],
+													 player,
+													 true,
+													 null)));
+			
+			sendEditMsg(sender,
+						StatCollector.translateToLocal("commands.prefix") +
+								StatCollector.translateToLocal("commands.move"));
 		}
 		catch (Exception e) {
 			HelperCommand.sendErrorMsg(sender, StatCollector.translateToLocal("commands.error.error"));

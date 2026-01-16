@@ -33,7 +33,13 @@ public class Paste extends CommandBase {
 	@Override
 	public void processCommand(ICommandSender sender, String[] strings) {
 		if (strings.length > 3) {
-			sendErrorMsg(sender, "Just one spot to paste, mate.");
+			sendErrorMsg(sender, StatCollector.translateToLocal("commands.error.selection2"));
+			
+			return;
+		}
+		
+		if (copyBlockList.isEmpty() && copyEntityList.isEmpty()) {
+			sendErrorMsg(sender, StatCollector.translateToLocal("commands.error.copy/paste"));
 			
 			return;
 		}
@@ -41,9 +47,15 @@ public class Paste extends CommandBase {
 		EntityPlayer player = getPlayer(sender, sender.getCommandSenderName());
 		World world = sender.getEntityWorld();
 		
-		int xLoc = strings.length == 1 ? Integer.parseInt(strings[0].split("/")[0]) : MathHelper.floor_double(player.posX);
-		int yLoc = strings.length == 1 ? Integer.parseInt(strings[0].split("/")[1]) : MathHelper.floor_double(player.posY);
-		int zLoc = strings.length == 1 ? Integer.parseInt(strings[0].split("/")[2]) : MathHelper.floor_double(player.posZ);
+		int xLoc = strings.length == 1
+				   ? Integer.parseInt(strings[0].split("/")[0])
+				   : MathHelper.floor_double(player.posX);
+		int yLoc = strings.length == 1
+				   ? Integer.parseInt(strings[0].split("/")[1])
+				   : MathHelper.floor_double(player.posY);
+		int zLoc = strings.length == 1
+				   ? Integer.parseInt(strings[0].split("/")[2])
+				   : MathHelper.floor_double(player.posZ);
 		
 		List<BlockInfo> pasteNonBlockList = new ArrayList<>();
 		Queue<BlockInfo> pasteBlockList = new LinkedList<>();
@@ -56,7 +68,6 @@ public class Paste extends CommandBase {
 		int maxX = Integer.MIN_VALUE;
 		int maxY = Integer.MIN_VALUE;
 		int maxZ = Integer.MIN_VALUE;
-		
 		
 		if (!copyEntityList.isEmpty()) {
 			for (EntityInfo entity : copyEntityList) {
@@ -100,7 +111,31 @@ public class Paste extends CommandBase {
 				pasteBlockList.add(pasteInfo);
 			}
 		}
-
-		editList.add(new QueueInfo(new Selection(new BlockPos(minX, minY, minZ), new BlockPos(maxX, maxY, maxZ)), pasteNonBlockList, pasteBlockList, new LinkedList<>(), entities, blocksToRemove, yLoc, 0, player));
+		
+		sendEditMsg(sender,
+					StatCollector.translateToLocal("commands.prefix") +
+							StatCollector.translateToLocal("commands.paste"));
+		Selection selection = new Selection(new BlockPos(minX, minY, minZ), new BlockPos(maxX, maxY, maxZ));
+		editList.add(new QueueInfo(selection,
+								   pasteNonBlockList,
+								   pasteBlockList,
+								   new LinkedList<>(),
+								   entities,
+								   blocksToRemove,
+								   yLoc,
+								   new int[SAVED_NUM],
+								   player,
+								   false,
+								   new QueueInfo(selection,
+												 new ArrayList<>(),
+												 new LinkedList<>(),
+												 new LinkedList<>(),
+												 new ArrayList<>(),
+												 new LinkedList<>(),
+												 minY,
+												 new int[SAVED_NUM],
+												 player,
+												 true,
+												 null)));
 	}
 }

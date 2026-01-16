@@ -9,6 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
+import static net.dravigen.creative_tools.api.HelperCommand.sendEditMsg;
 import static net.dravigen.creative_tools.api.ToolHelper.*;
 import static net.dravigen.creative_tools.api.ToolHelper.copyBlockList;
 import static net.dravigen.creative_tools.api.ToolHelper.copyEntityList;
@@ -40,7 +41,7 @@ public class Cut extends CommandBase {
 	@Override
 	public void processCommand(ICommandSender sender, String[] strings) {
 		if (strings.length == 0 && (pos1 == null || pos2 == null)) {
-			HelperCommand.sendErrorMsg(sender, StatCollector.translateToLocal("commands.error.selection3"));
+			HelperCommand.sendErrorMsg(sender, StatCollector.translateToLocal("commands.error.selection2"));
 			
 			return;
 		}
@@ -51,9 +52,9 @@ public class Cut extends CommandBase {
 		World world = sender.getEntityWorld();
 		EntityPlayer player = getPlayer(sender, sender.getCommandSenderName());
 		
-		int x1 = strings.length == 1 ? Integer.parseInt(strings[0].split("/")[0]) : pos1.x;
-		int y1 = strings.length == 1 ? Integer.parseInt(strings[0].split("/")[1]) : pos1.y;
-		int z1 = strings.length == 1 ? Integer.parseInt(strings[0].split("/")[2]) : pos1.z;
+		int x1 = strings.length == 2 ? Integer.parseInt(strings[0].split("/")[0]) : pos1.x;
+		int y1 = strings.length == 2 ? Integer.parseInt(strings[0].split("/")[1]) : pos1.y;
+		int z1 = strings.length == 2 ? Integer.parseInt(strings[0].split("/")[2]) : pos1.z;
 		int x2 = strings.length == 2 ? Integer.parseInt(strings[1].split("/")[0]) : pos2.x;
 		int y2 = strings.length == 2 ? Integer.parseInt(strings[1].split("/")[1]) : pos2.y;
 		int z2 = strings.length == 2 ? Integer.parseInt(strings[1].split("/")[2]) : pos2.z;
@@ -67,15 +68,22 @@ public class Cut extends CommandBase {
 		
 		Selection selection = new Selection(new BlockPos(minX, minY, minZ), new BlockPos(maxX, maxY, maxZ));
 		
-		int num = 0;
-		
-		List<Entity> entitiesInSelection = world.getEntitiesWithinAABBExcludingEntity(player, new AxisAlignedBB(minX, minY, minZ, maxX + 1, maxY + 1, maxZ + 1));
+		List<Entity> entitiesInSelection = world.getEntitiesWithinAABBExcludingEntity(player,
+																					  new AxisAlignedBB(minX,
+																										minY,
+																										minZ,
+																										maxX + 1,
+																										maxY + 1,
+																										maxZ + 1));
 		Queue<BlockToRemoveInfo> blocksToRemove = new LinkedList<>();
+		List<BlockInfo> undoNonBlock = new ArrayList<>();
+		Queue<BlockInfo> undoBlock = new LinkedList<>();
+		List<EntityInfo> undoEntity = new ArrayList<>();
 		
 		if (!entitiesInSelection.isEmpty()) {
 			for (Entity entity : entitiesInSelection) {
 				if (entity instanceof EntityPlayer) continue;
-
+				
 				NBTTagCompound nbt = new NBTTagCompound();
 				entity.writeToNBT(nbt);
 				copyEntityList.add(new EntityInfo(new LocAndAngle(entity.posX - minX,
@@ -83,7 +91,12 @@ public class Cut extends CommandBase {
 																  entity.posZ - minZ,
 																  entity.rotationYaw,
 																  entity.rotationPitch), entity.getClass(), nbt));
-				entity.setDead();
+				
+				undoEntity.add(new EntityInfo(new LocAndAngle(entity.posX,
+															  entity.posY,
+															  entity.posZ,
+															  entity.rotationYaw,
+															  entity.rotationPitch), entity.getClass(), nbt));
 			}
 		}
 		
@@ -104,18 +117,54 @@ public class Cut extends CommandBase {
 						tileNBT.removeTag("z");
 					}
 					
-					copyBlockList.add(num, new BlockInfo(x - minX, y - minY, z - minZ, id, meta, tileNBT));
-				
-					if (id != 0) {
-						blocksToRemove.add(new BlockToRemoveInfo(x, y, z, tile != null));
-						//removeBlock(world, x, y, z, tile != null);
+					BlockInfo pasteInfo = new BlockInfo(x, y, z, id, meta, tileNBT);
+					
+					Block block = Block.blocksList[id];
+					
+					if (block != null) {
+						if ((!block.canPlaceBlockOnSide(world, 0, 254, 0, 1) ||
+								block instanceof BlockFluid ||
+								block.isFallingBlock() ||
+								!block.canPlaceBlockAt(world, 0, 254, 0))) {
+							undoNonBlock.add(pasteInfo);
+						}
+						else {
+							undoBlock.add(pasteInfo);
+						}
+					}
+					else {
+						undoBlock.add(pasteInfo);
 					}
 					
-					num++;
+					copyBlockList.add(new BlockInfo(x - minX, y - minY, z - minZ, id, meta, tileNBT));
+					
+					blocksToRemove.add(new BlockToRemoveInfo(x, y, z, tile != null));
 				}
 			}
 		}
 		
-		editList.add(new QueueInfo(selection, new ArrayList<>(), new LinkedList<>(), new LinkedList<>(), new ArrayList<>(), blocksToRemove, minY, num, player));
+		sendEditMsg(sender,
+					StatCollector.translateToLocal("commands.prefix") + StatCollector.translateToLocal("commands.cut"));
+		editList.add(new QueueInfo(selection,
+								   new ArrayList<>(),
+								   new LinkedList<>(),
+								   new LinkedList<>(),
+								   new ArrayList<>(),
+								   blocksToRemove,
+								   minY,
+								   new int[SAVED_NUM],
+								   player,
+								   true,
+								   new QueueInfo(selection,
+												 undoNonBlock,
+												 undoBlock,
+												 new LinkedList<>(),
+												 undoEntity,
+												 new LinkedList<>(),
+												 minY,
+												 new int[SAVED_NUM],
+												 player,
+												 true,
+												 null)));
 	}
 }

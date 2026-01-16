@@ -2,10 +2,7 @@ package net.dravigen.creative_tools;
 
 import api.AddonHandler;
 import api.BTWAddon;
-import net.dravigen.creative_tools.commands.Copy;
-import net.dravigen.creative_tools.commands.Cut;
-import net.dravigen.creative_tools.commands.Move;
-import net.dravigen.creative_tools.commands.Paste;
+import net.dravigen.creative_tools.commands.*;
 
 public class CreativeTools extends BTWAddon {
     private static CreativeTools instance;
@@ -27,5 +24,13 @@ public class CreativeTools extends BTWAddon {
 		registerAddonCommand(new Paste());
 		registerAddonCommand(new Move());
 		registerAddonCommand(new Cut());
+		registerAddonCommand(new Stack());
+		registerAddonCommand(new Remove());
+		registerAddonCommand(new Pos1());
+		registerAddonCommand(new Pos2());
+		registerAddonCommand(new PosAll());
+		registerAddonCommand(new Undo());
+		registerAddonCommand(new Redo());
+		
 	}
 }
