@@ -31,6 +31,6 @@ public class CreativeTools extends BTWAddon {
 		registerAddonCommand(new PosAll());
 		registerAddonCommand(new Undo());
 		registerAddonCommand(new Redo());
-		
+		registerAddonCommand(new Rotate());
 	}
 }

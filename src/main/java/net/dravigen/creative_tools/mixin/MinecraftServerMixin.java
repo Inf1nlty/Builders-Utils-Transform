@@ -3,6 +3,7 @@ package net.dravigen.creative_tools.mixin;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.src.*;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -16,10 +17,15 @@ import static net.dravigen.creative_tools.api.ToolHelper.*;
 
 @Mixin(MinecraftServer.class)
 public abstract class MinecraftServerMixin {
+	@Shadow
+	public abstract boolean isSinglePlayer();
+	
 	@Unique
-	double SPEED = 50;
+	int SPEED = 100;
 	@Unique
-	double REMOVE_SPEED = 250;
+	int SPEED_UNDO = 1000;
+	@Unique
+	int REMOVE_SPEED = 500;
 	
 	@Unique
 	private static void removeBlock(World world, int x, int z, int y, boolean hasTile) {
@@ -85,8 +91,14 @@ public abstract class MinecraftServerMixin {
 	
 	@Inject(method = "tick", at = @At("HEAD"))
 	private void tick(CallbackInfo ci) {
+		if (!this.isSinglePlayer()) return;
+		
 		for (int j = 0; j < editList.size(); j++) {
 			QueueInfo queueInfo = editList.get(j);
+			int speed = SPEED;
+			if (queueInfo.id().equals("redo") || queueInfo.id().equals("undo")) {
+				speed = SPEED_UNDO;
+			}
 			
 			World world = queueInfo.player().getEntityWorld();
 			
@@ -144,7 +156,7 @@ public abstract class MinecraftServerMixin {
 			}
 			else {
 				if (!isBlockEmpty) {
-					for (int i = 0; i < SPEED; i++) {
+					for (int i = 0; i < speed; i++) {
 						if (blockList.isEmpty()) break;
 						
 						BlockInfo block = blockList.poll();
@@ -290,9 +302,23 @@ public abstract class MinecraftServerMixin {
 				}
 				
 				for (Selection selection : selections) {
-					for (int y = selection.pos1().y; y <= selection.pos2().y; y++) {
-						for (int x = selection.pos1().x; x <= selection.pos2().x; x++) {
-							for (int z = selection.pos1().z; z <= selection.pos2().z; z++) {
+					int x1 = selection.pos1().x;
+					int y1 = selection.pos1().y;
+					int z1 = selection.pos1().z;
+					int x2 = selection.pos2().x;
+					int y2 = selection.pos2().y;
+					int z2 = selection.pos2().z;
+					
+					int minX = Math.min(x1, x2);
+					int minY = Math.min(y1, y2);
+					int minZ = Math.min(z1, z2);
+					int maxX = Math.max(x1, x2);
+					int maxY = Math.max(y1, y2);
+					int maxZ = Math.max(z1, z2);
+					
+					for (int y = minY; y <= maxY; y++) {
+						for (int x = minX; x <= maxX; x++) {
+							for (int z = minZ; z <= maxZ; z++) {
 								world.markBlockForUpdate(x, y, z);
 							}
 						}

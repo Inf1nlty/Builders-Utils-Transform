@@ -1,7 +1,10 @@
 package net.dravigen.creative_tools.api;
 
 import api.world.BlockPos;
+import btw.block.BTWBlocks;
+import btw.block.blocks.ButtonBlock;
 import net.minecraft.src.*;
+import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -61,13 +64,11 @@ public class ToolHelper {
 		holder.blocksToRemove.addAll(toAdd.blocksToRemove);
 	}
 
-	public static QueueInfo mergeQueue(QueueInfo holder, QueueInfo toMerge) {
+	public static void mergeQueue(QueueInfo holder, QueueInfo toMerge) {
 		addSavedList(holder.editList, toMerge.editList);
 		addSavedList(holder.undoList, toMerge.undoList);
 		addSavedList(holder.redoList, toMerge.redoList);
 		holder.selection.addAll(toMerge.selection);
-		
-		return holder;
 	}
 	
 	public static void saveReplacedEntities(World world, EntityPlayer player, Selection selection,
@@ -112,50 +113,145 @@ public class ToolHelper {
 		for (int y = minY; y <= maxY; y++) {
 			for (int x = minX; x <= maxX; x++) {
 				for (int z = minZ; z <= maxZ; z++) {
-					int id = world.getBlockId(x, y, z);
-					int meta = world.getBlockMetadata(x, y, z);
-					TileEntity tile = world.getBlockTileEntity(x, y, z);
+					getBlocksInfo result = getGetBlocksInfo(world, x, y, z);
 					
 					NBTTagCompound nbt = null;
 					
-					if (tile != null) {
+					if (result.tile() != null) {
 						nbt = new NBTTagCompound();
-						tile.writeToNBT(nbt);
+						result.tile().writeToNBT(nbt);
 						nbt.removeTag("x");
 						nbt.removeTag("y");
 						nbt.removeTag("z");
 					}
 					
-					BlockInfo pasteInfo = new BlockInfo(x, y, z, id, meta, nbt);
-					
-					Block block = Block.blocksList[id];
+					BlockInfo pasteInfo = new BlockInfo(x, y, z, result.id(), result.meta(), nbt);
 					
 					undoBlock.add(pasteInfo);
-
-					/*
-					if (block != null) {
-						if ((!block.canPlaceBlockOnSide(world, 0, 254, 0, 1) ||
-								block instanceof BlockFluid ||
-								block.isFallingBlock() ||
-								!block.canPlaceBlockAt(world, 0, 254, 0))) {
-							undoNonBlock.add(pasteInfo);
-						}
-						else {
-							undoBlock.add(pasteInfo);
-						}
-					}
-					else {
-						undoBlock.add(pasteInfo);
-					}*/
 					
-					moveBlockList.add(new BlockInfo(x - minX, y - minY, z - minZ, id, meta, nbt));
+					moveBlockList.add(new BlockInfo(x - minX, y - minY, z - minZ, result.id(), result.meta(), nbt));
 					
-					blocksToRemove.add(new BlockToRemoveInfo(x, y, z, tile != null));
+					blocksToRemove.add(new BlockToRemoveInfo(x, y, z, result.tile() != null));
 				}
 			}
 		}
 	}
-
+	
+	public static @NotNull getBlocksInfo getGetBlocksInfo(World world, int x, int y, int z) {
+		int id = world.getBlockId(x, y, z);
+		int meta = world.getBlockMetadata(x, y, z);
+		TileEntity tile = world.getBlockTileEntity(x, y, z);
+		
+		if (id == BTWBlocks.axlePowerSource.blockID) {
+			id = BTWBlocks.axle.blockID;
+		}
+		
+		return new getBlocksInfo(id, meta, tile);
+	}
+	
+	public static int rotateBlock(int id, int meta, boolean clockwise, TileEntity tile, NBTTagCompound nbt) {
+		Block currentBlock = Block.blocksList[id];
+		int i = meta;
+		
+		if (currentBlock != null) {
+			if (currentBlock instanceof ButtonBlock || currentBlock instanceof BlockLever) {
+				int i2 = i & 8;
+				i &= 7;
+				
+				i = switch (i) {
+					case 1 -> clockwise ? 3 : 4;
+					case 2 -> clockwise ? 4 : 3;
+					case 3 -> clockwise ? 2 : 1;
+					default -> clockwise ? 1 : 2;
+				};
+				
+				if (!(currentBlock instanceof ButtonBlock)) i |= i2;
+			}
+			else if (currentBlock instanceof BlockSign sign) {
+				if (sign.isFreestanding) i = i + (clockwise ? 4 : -4) & 15;
+				else {
+					i = switch (i) {
+						case 2 -> clockwise ? 5 : 4;
+						case 3 -> clockwise ? 4 : 5;
+						case 4 -> clockwise ? 2 : 3;
+						default -> clockwise ? 3 : 2;
+					};
+				}
+				
+			}
+			else if (currentBlock instanceof BlockSkull) {
+				if (tile instanceof TileEntitySkull skullEnt) {
+					if (meta != 1) {
+						i = switch (i) {
+							case 2 -> clockwise ? 5 : 4;
+							case 3 -> clockwise ? 4 : 5;
+							case 4 -> clockwise ? 2 : 3;
+							default -> clockwise ? 3 : 2;
+						};
+					}
+					else {
+						int skullFace = skullEnt.getSkullRotationServerSafe();
+						
+						if (clockwise) {
+							if ((skullFace += 4) > 15) {
+								skullFace -= 16;
+							}
+						} else if ((skullFace -= 4) < 0) {
+							skullFace += 16;
+						}
+						
+						nbt.setByte("Rot", (byte) (skullFace & 0xFF));
+					}
+				}
+			}
+			else if (currentBlock instanceof BlockTrapDoor) {
+				int prevI = i;
+				i &= 0xFC;
+				int i1 = prevI & 3;
+				
+				i |= switch (i1) {
+					case 0 -> clockwise ? 3 : 2;
+					case 1 -> clockwise ? 2 : 3;
+					case 2 -> clockwise ? 0 : 1;
+					default -> clockwise ? 1 : 0;
+				};
+			}
+			else if (currentBlock instanceof BlockPistonBase || currentBlock instanceof BlockPistonExtension) {
+				int i1 = i & 7;
+				int i2 = i & 8;
+				
+				i = switch (i1) {
+					case 2 -> clockwise ? 5 : 4;
+					case 3 -> clockwise ? 4 : 5;
+					case 4 -> clockwise ? 2 : 3;
+					default -> clockwise ? 3 : 2;
+				};
+				
+				i |= i2;
+			}
+			else if (currentBlock instanceof BlockDoor) {
+				int i1 = i & 8;
+				
+				i = switch (i) {
+					case 0 -> clockwise ? 1 : 3;
+					case 1 -> clockwise ? 2 : 0;
+					case 2 -> clockwise ? 3 : 1;
+					case 3 -> clockwise ? 0 : 2;
+					case 4 -> clockwise ? 5 : 7;
+					case 5 -> clockwise ? 6 : 4;
+					case 6 -> clockwise ? 7 : 5;
+					default -> clockwise ? 4 : 6;
+				};
+				
+				i |= i1;
+			}
+			else {
+				i = currentBlock.rotateMetadataAroundYAxis(i, clockwise);
+			}
+		}
+		return i;
+	}
+	
 	public static void copyEntityInSelection(List<Entity> entitiesInSelection, List<EntityInfo> entities, int minX,
 			int minY, int minZ, List<EntityInfo> undoEntity) {
 		for (Entity entity : entitiesInSelection) {
@@ -179,10 +275,10 @@ public class ToolHelper {
 
 	public static void saveBlockReplaced(World world, int x, int y, int z, List<BlockInfo> undoNonBlock,
 			Queue<BlockInfo> undoBlock) {
-		int id = world.getBlockId(x, y, z);
-		int meta = world.getBlockMetadata(x, y, z);
-		TileEntity tile = world.getBlockTileEntity(x, y, z);
-		
+		getBlocksInfo result = getGetBlocksInfo(world, x, y, z);
+		int id = result.id;
+		int meta = result.meta;
+		TileEntity tile = result.tile;
 		NBTTagCompound nbt = null;
 		
 		if (tile != null) {
@@ -278,6 +374,12 @@ public class ToolHelper {
 	
 	public record Selection(BlockPos pos1, BlockPos pos2) {}
 	
+	public record SelectionD(BlockPosD pos1, BlockPosD pos2) {}
+	
 	public record SavedLists(List<BlockInfo> nonBlockList, Queue<BlockInfo> blockList, Queue<BlockInfo> allBlocks,
 							 List<EntityInfo> entities, Queue<BlockToRemoveInfo> blocksToRemove) {}
+	
+	public record BlockPosD(double x, double y, double z) {}
+	
+	public record getBlocksInfo(int id, int meta, TileEntity tile) {}
 }

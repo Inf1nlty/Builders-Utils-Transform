@@ -131,7 +131,10 @@ public class Move extends CommandBase {
 				saveBlockReplaced(world, x, y, z, undoNonBlock, undoBlock);
 			}
 			
-			Selection selection2 = new Selection(new BlockPos(minX, minY, minZ), new BlockPos(maxX, maxY, maxZ));
+			pos1 = new BlockPos(minX, minY, minZ);
+			pos2 = new BlockPos(maxX, maxY, maxZ);
+			
+			Selection selection2 = new Selection(pos1, pos2);
 			
 			saveReplacedEntities(world, player, selection2, undoEntity);
 			

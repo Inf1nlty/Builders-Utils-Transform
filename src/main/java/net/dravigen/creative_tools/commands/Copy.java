@@ -73,10 +73,10 @@ public class Copy extends CommandBase {
 		for (int y = minY; y <= maxY; y++) {
 			for (int x = minX; x <= maxX; x++) {
 				for (int z = minZ; z <= maxZ; z++) {
-					int id = world.getBlockId(x, y, z);
-					int meta = world.getBlockMetadata(x, y, z);
-					TileEntity tile = world.getBlockTileEntity(x, y, z);
-					
+					getBlocksInfo result = getGetBlocksInfo(world, x, y, z);
+					int id = result.id();
+					int meta = result.meta();
+					TileEntity tile = result.tile();
 					NBTTagCompound tileNBT = null;
 					
 					if (tile != null) {
