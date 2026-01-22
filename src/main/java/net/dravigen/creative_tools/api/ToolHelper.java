@@ -63,7 +63,7 @@ public class ToolHelper {
 		holder.entities.addAll(toAdd.entities);
 		holder.blocksToRemove.addAll(toAdd.blocksToRemove);
 	}
-
+	
 	public static void mergeQueue(QueueInfo holder, QueueInfo toMerge) {
 		addSavedList(holder.editList, toMerge.editList);
 		addSavedList(holder.undoList, toMerge.undoList);
@@ -92,7 +92,7 @@ public class ToolHelper {
 														  entity.rotationPitch), entity.getClass(), nbt));
 		}
 	}
-
+	
 	public static void saveEntitiesToPlace(List<EntityInfo> entities, List<EntityInfo> entitiesToPaste, int x3, int y3,
 			int z3) {
 		for (EntityInfo entity : entities) {
@@ -106,7 +106,7 @@ public class ToolHelper {
 											   entity.nbt()));
 		}
 	}
-
+	
 	public static void copyRemoveBlockSelection(int minY, int maxY, int minX, int maxX, int minZ, int maxZ, World world,
 			List<BlockInfo> undoNonBlock, Queue<BlockInfo> undoBlock, Queue<BlockInfo> moveBlockList,
 			Queue<BlockToRemoveInfo> blocksToRemove) {
@@ -196,7 +196,8 @@ public class ToolHelper {
 							if ((skullFace += 4) > 15) {
 								skullFace -= 16;
 							}
-						} else if ((skullFace -= 4) < 0) {
+						}
+						else if ((skullFace -= 4) < 0) {
 							skullFace += 16;
 						}
 						
@@ -272,7 +273,7 @@ public class ToolHelper {
 														  entity.rotationPitch), entity.getClass(), nbt));
 		}
 	}
-
+	
 	public static void saveBlockReplaced(World world, int x, int y, int z, List<BlockInfo> undoNonBlock,
 			Queue<BlockInfo> undoBlock) {
 		getBlocksInfo result = getGetBlocksInfo(world, x, y, z);

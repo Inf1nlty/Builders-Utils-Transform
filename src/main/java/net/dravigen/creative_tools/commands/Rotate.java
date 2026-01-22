@@ -82,17 +82,15 @@ public class Rotate extends CommandBase {
 			NBTTagCompound nbt = new NBTTagCompound();
 			entity.writeToNBT(nbt);
 			
-			entities.add(new EntityInfo(new LocAndAngle(x3,
-														entity.posY,
-														z3,
-														entity.rotationYaw,
-														entity.rotationPitch), entity.getClass(), nbt));
+			entities.add(new EntityInfo(new LocAndAngle(x3, entity.posY, z3, entity.rotationYaw, entity.rotationPitch),
+										entity.getClass(),
+										nbt));
 			
 			undoEntity.add(new EntityInfo(new LocAndAngle(entity.posX,
-														   entity.posY,
-														   entity.posZ,
-														   entity.rotationYaw,
-														   entity.rotationPitch), entity.getClass(), nbt));
+														  entity.posY,
+														  entity.posZ,
+														  entity.rotationYaw,
+														  entity.rotationPitch), entity.getClass(), nbt));
 		}
 		
 		

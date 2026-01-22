@@ -1,21 +1,20 @@
 package net.dravigen.creative_tools.mixin;
 
-import net.minecraft.src.*;
+import net.minecraft.src.ICamera;
+import net.minecraft.src.RenderGlobal;
+import net.minecraft.src.Vec3;
 import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import static net.dravigen.creative_tools.api.ToolHelper.*;
-import static net.dravigen.creative_tools.api.ToolHelper.pos1;
-import static net.dravigen.creative_tools.api.ToolHelper.pos2;
 
 @Mixin(RenderGlobal.class)
 public class RenderGlobalMixin {
-
+	
 	@Inject(method = "renderEntities", at = @At("HEAD"))
 	private void renderSelection(Vec3 par1Vec3, ICamera par2ICamera, float par3, CallbackInfo ci) {
 		if (pos1 != null && pos2 != null) {
@@ -37,9 +36,7 @@ public class RenderGlobalMixin {
 			GL11.glDisable(GL11.GL_LIGHTING);
 			
 			SelectionD selection = new SelectionD(new BlockPosD(minX - 0.005, minY - 0.005, minZ - 0.005),
-												  new BlockPosD(maxX + 1 + 0.005,
-																maxY + 1 + 0.005,
-																maxZ + 1 + 0.005));
+												  new BlockPosD(maxX + 1 + 0.005, maxY + 1 + 0.005, maxZ + 1 + 0.005));
 			
 			
 			GL11.glDisable(GL11.GL_DEPTH_TEST);

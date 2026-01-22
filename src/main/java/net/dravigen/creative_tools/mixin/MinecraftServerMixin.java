@@ -17,16 +17,13 @@ import static net.dravigen.creative_tools.api.ToolHelper.*;
 
 @Mixin(MinecraftServer.class)
 public abstract class MinecraftServerMixin {
-	@Shadow
-	public abstract boolean isSinglePlayer();
-	
 	@Unique
 	int SPEED = 100;
 	@Unique
 	int SPEED_UNDO = 1000;
 	@Unique
 	int REMOVE_SPEED = 500;
-	
+
 	@Unique
 	private static void removeBlock(World world, int x, int z, int y, boolean hasTile) {
 		if (world.isAirBlock(x, y, z)) return;
@@ -88,6 +85,9 @@ public abstract class MinecraftServerMixin {
 		
 		tile.readFromNBT(pasteNbt);
 	}
+	
+	@Shadow
+	public abstract boolean isSinglePlayer();
 	
 	@Inject(method = "tick", at = @At("HEAD"))
 	private void tick(CallbackInfo ci) {
