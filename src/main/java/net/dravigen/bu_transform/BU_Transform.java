@@ -1,13 +1,13 @@
-package net.dravigen.creative_tools;
+package net.dravigen.bu_transform;
 
 import api.AddonHandler;
 import api.BTWAddon;
-import net.dravigen.creative_tools.commands.*;
+import net.dravigen.bu_transform.commands.*;
 
-public class CreativeTools extends BTWAddon {
-	private static CreativeTools instance;
+public class BU_Transform extends BTWAddon {
+	private static BU_Transform instance;
 	
-	public CreativeTools() {
+	public BU_Transform() {
 		super();
 		instance = this;
 	}

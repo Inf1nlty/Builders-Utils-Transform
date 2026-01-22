@@ -1,4 +1,4 @@
-package net.dravigen.creative_tools.commands;
+package net.dravigen.bu_transform.commands;
 
 import api.world.BlockPos;
 import net.minecraft.src.*;
@@ -8,17 +8,17 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
-import static net.dravigen.creative_tools.api.ToolHelper.*;
+import static net.dravigen.bu_transform.api.ToolHelper.*;
 
-public class Remove extends CommandBase {
+public class Cut extends CommandBase {
 	@Override
 	public String getCommandName() {
-		return "remove";
+		return "cut";
 	}
 	
 	@Override
 	public String getCommandUsage(ICommandSender iCommandSender) {
-		return "/remove [x1/y1/z1] [x2/y2/z2]";
+		return "/cut [x1/y1/z1] [x2/y2/z2]";
 	}
 	
 	@Override
@@ -30,6 +30,9 @@ public class Remove extends CommandBase {
 		}
 		
 		redoList.clear();
+		copyBlockList.clear();
+		copyEntityList.clear();
+		
 		World world = sender.getEntityWorld();
 		EntityPlayer player = getPlayer(sender, sender.getCommandSenderName());
 		
@@ -48,29 +51,37 @@ public class Remove extends CommandBase {
 		int maxZ = Math.max(z1, z2);
 		
 		Selection selection = new Selection(new BlockPos(minX, minY, minZ), new BlockPos(maxX, maxY, maxZ));
+		
 		List<Selection> selections = new ArrayList<>();
 		selections.add(selection);
 		
+		List<Entity> entitiesInSelection = world.getEntitiesWithinAABBExcludingEntity(player,
+																					  new AxisAlignedBB(minX,
+																										minY,
+																										minZ,
+																										maxX + 1,
+																										maxY + 1,
+																										maxZ + 1));
 		Queue<BlockToRemoveInfo> blocksToRemove = new LinkedList<>();
 		List<BlockInfo> undoNonBlock = new ArrayList<>();
 		Queue<BlockInfo> undoBlock = new LinkedList<>();
 		List<EntityInfo> undoEntity = new ArrayList<>();
 		
-		for (int y = minY; y <= maxY; y++) {
-			for (int x = minX; x <= maxX; x++) {
-				for (int z = minZ; z <= maxZ; z++) {
-					blocksToRemove.add(new BlockToRemoveInfo(x, y, z, world.blockHasTileEntity(x, y, z)));
-					
-					saveBlockReplaced(world, x, y, z, undoNonBlock, undoBlock);
-				}
-			}
-		}
+		copyEntityInSelection(entitiesInSelection, copyEntityList, minX, minY, minZ, undoEntity);
 		
-		saveReplacedEntities(world, player, selection, undoEntity);
-		
+		copyRemoveBlockSelection(minY,
+								 maxY,
+								 minX,
+								 maxX,
+								 minZ,
+								 maxZ,
+								 world,
+								 undoNonBlock,
+								 undoBlock,
+								 copyBlockList,
+								 blocksToRemove);
 		sendEditMsg(sender,
-					StatCollector.translateToLocal("commands.prefix") +
-							StatCollector.translateToLocal("commands.remove"));
+					StatCollector.translateToLocal("commands.prefix") + StatCollector.translateToLocal("commands.cut"));
 		SavedLists edit = new SavedLists(new ArrayList<>(),
 										 new LinkedList<>(),
 										 new LinkedList<>(),
@@ -82,13 +93,14 @@ public class Remove extends CommandBase {
 										 new ArrayList<>(undoEntity),
 										 new LinkedList<>());
 		
-		editList.add(new QueueInfo("remove",
+		editList.add(new QueueInfo("cut",
 								   selections,
 								   edit,
 								   undo,
 								   duplicateSavedList(edit),
 								   new int[SAVED_NUM],
 								   player));
+		
 	}
 	
 	@Override

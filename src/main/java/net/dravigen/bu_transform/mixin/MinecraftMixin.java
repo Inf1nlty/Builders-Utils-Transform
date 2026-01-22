@@ -1,4 +1,4 @@
-package net.dravigen.creative_tools.mixin;
+package net.dravigen.bu_transform.mixin;
 
 import net.minecraft.src.EntityClientPlayerMP;
 import net.minecraft.src.Item;

@@ -1,4 +1,4 @@
-package net.dravigen.creative_tools.commands;
+package net.dravigen.bu_transform.commands;
 
 import api.world.BlockPos;
 import net.minecraft.src.*;
@@ -8,7 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
-import static net.dravigen.creative_tools.api.ToolHelper.*;
+import static net.dravigen.bu_transform.api.ToolHelper.*;
 
 public class Move extends CommandBase {
 	@Override

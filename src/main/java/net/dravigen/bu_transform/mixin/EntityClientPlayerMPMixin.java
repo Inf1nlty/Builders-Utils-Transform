@@ -1,7 +1,7 @@
-package net.dravigen.creative_tools.mixin;
+package net.dravigen.bu_transform.mixin;
 
 import api.world.BlockPos;
-import net.dravigen.creative_tools.api.ToolHelper;
+import net.dravigen.bu_transform.api.ToolHelper;
 import net.minecraft.src.*;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.input.Mouse;
@@ -11,8 +11,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import static net.dravigen.creative_tools.api.ToolHelper.getBlockPlayerIsLooking;
-import static net.dravigen.creative_tools.api.ToolHelper.sendEditMsg;
+import static net.dravigen.bu_transform.api.ToolHelper.getBlockPlayerIsLooking;
+import static net.dravigen.bu_transform.api.ToolHelper.sendEditMsg;
 
 @Mixin(EntityClientPlayerMP.class)
 public abstract class EntityClientPlayerMPMixin extends EntityPlayer {

@@ -1,10 +1,10 @@
-package net.dravigen.creative_tools.commands;
+package net.dravigen.bu_transform.commands;
 
 import net.minecraft.src.*;
 
 import java.util.List;
 
-import static net.dravigen.creative_tools.api.ToolHelper.*;
+import static net.dravigen.bu_transform.api.ToolHelper.*;
 
 public class Pos1 extends CommandBase {
 	@Override

@@ -1,31 +1,31 @@
 {
   "schemaVersion": 1,
-  "id": "creative_tools",
+  "id": "bu_transform",
   "version": "${version}",
-  "name": "Creative Tools",
+  "name": "Builder's Utils: Transform",
   "description": "Every tools you would ever want when designing contraption or building structures",
   "authors": [
     "DraViGen"
   ],
   "contact": {
     "homepage": "https://modrinth.com/mod/btw-addon-creative-tools",
-    "sources": "https://github.com/BTW-Community/Creative-Tools"
+    "sources": "https://github.com/BTW-Community/Builders-Utils-Transform"
   },
   "license": "CC-BY-4.0",
-  "icon": "assets/creative_tools/icon.jpg",
+  "icon": "assets/bu_transform/icon.jpg",
   "environment": "*",
   "entrypoints": {
     "main": [
     ],
     "btw:addon": [
-      "net.dravigen.creative_tools.CreativeTools"
+      "net.dravigen.bu_transform.BU_Transform"
     ]
   },
   "custom": {
     "btw:addon_prefix": "EX"
   },
   "mixins": [
-    "creative_tools.mixins.json"
+    "bu_transform.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.14.19",

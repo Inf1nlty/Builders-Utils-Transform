@@ -1,4 +1,4 @@
-package net.dravigen.creative_tools.mixin;
+package net.dravigen.bu_transform.mixin;
 
 import net.minecraft.src.ICamera;
 import net.minecraft.src.RenderGlobal;
@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import static net.dravigen.creative_tools.api.ToolHelper.*;
+import static net.dravigen.bu_transform.api.ToolHelper.*;
 
 @Mixin(RenderGlobal.class)
 public class RenderGlobalMixin {

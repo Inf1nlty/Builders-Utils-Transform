@@ -1,4 +1,4 @@
-package net.dravigen.creative_tools.mixin;
+package net.dravigen.bu_transform.mixin;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.src.*;
@@ -13,7 +13,7 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Queue;
 
-import static net.dravigen.creative_tools.api.ToolHelper.*;
+import static net.dravigen.bu_transform.api.ToolHelper.*;
 
 @Mixin(MinecraftServer.class)
 public abstract class MinecraftServerMixin {

@@ -1,21 +1,24 @@
-package net.dravigen.creative_tools.commands;
+package net.dravigen.bu_transform.commands;
 
+import api.world.BlockPos;
 import net.minecraft.src.*;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
-import static net.dravigen.creative_tools.api.ToolHelper.*;
+import static net.dravigen.bu_transform.api.ToolHelper.*;
 
-public class Copy extends CommandBase {
-	
+public class Remove extends CommandBase {
 	@Override
 	public String getCommandName() {
-		return "copy";
+		return "remove";
 	}
 	
 	@Override
 	public String getCommandUsage(ICommandSender iCommandSender) {
-		return "/copy [x1/y1/z1] [x2/y2/z2]";
+		return "/remove [x1/y1/z1] [x2/y2/z2]";
 	}
 	
 	@Override
@@ -26,9 +29,7 @@ public class Copy extends CommandBase {
 			return;
 		}
 		
-		copyBlockList.clear();
-		copyEntityList.clear();
-		
+		redoList.clear();
 		World world = sender.getEntityWorld();
 		EntityPlayer player = getPlayer(sender, sender.getCommandSenderName());
 		
@@ -46,57 +47,48 @@ public class Copy extends CommandBase {
 		int maxY = Math.max(y1, y2);
 		int maxZ = Math.max(z1, z2);
 		
-		int blockNum = 0;
-		int entityNum = 0;
+		Selection selection = new Selection(new BlockPos(minX, minY, minZ), new BlockPos(maxX, maxY, maxZ));
+		List<Selection> selections = new ArrayList<>();
+		selections.add(selection);
 		
-		List<Entity> entitiesInSelection = world.getEntitiesWithinAABBExcludingEntity(player,
-																					  new AxisAlignedBB(minX,
-																										minY,
-																										minZ,
-																										maxX + 1,
-																										maxY + 1,
-																										maxZ + 1));
-		
-		for (Entity entity : entitiesInSelection) {
-			if (entity instanceof EntityPlayer) continue;
-			NBTTagCompound nbt = new NBTTagCompound();
-			entity.writeToNBT(nbt);
-			copyEntityList.add(new EntityInfo(new LocAndAngle(entity.posX - minX,
-															  entity.posY - minY,
-															  entity.posZ - minZ,
-															  entity.rotationYaw,
-															  entity.rotationPitch), entity.getClass(), nbt));
-			entityNum++;
-		}
-		
+		Queue<BlockToRemoveInfo> blocksToRemove = new LinkedList<>();
+		List<BlockInfo> undoNonBlock = new ArrayList<>();
+		Queue<BlockInfo> undoBlock = new LinkedList<>();
+		List<EntityInfo> undoEntity = new ArrayList<>();
 		
 		for (int y = minY; y <= maxY; y++) {
 			for (int x = minX; x <= maxX; x++) {
 				for (int z = minZ; z <= maxZ; z++) {
-					getBlocksInfo result = getGetBlocksInfo(world, x, y, z);
-					int id = result.id();
-					int meta = result.meta();
-					TileEntity tile = result.tile();
-					NBTTagCompound tileNBT = null;
+					blocksToRemove.add(new BlockToRemoveInfo(x, y, z, world.blockHasTileEntity(x, y, z)));
 					
-					if (tile != null) {
-						tileNBT = new NBTTagCompound();
-						tile.writeToNBT(tileNBT);
-						tileNBT.removeTag("x");
-						tileNBT.removeTag("y");
-						tileNBT.removeTag("z");
-					}
-					
-					copyBlockList.add(new BlockInfo(x - minX, y - minY, z - minZ, id, meta, tileNBT));
-					
-					blockNum++;
+					saveBlockReplaced(world, x, y, z, undoNonBlock, undoBlock);
 				}
 			}
 		}
 		
+		saveReplacedEntities(world, player, selection, undoEntity);
+		
 		sendEditMsg(sender,
 					StatCollector.translateToLocal("commands.prefix") +
-							String.format(StatCollector.translateToLocal("commands.copy"), blockNum, entityNum));
+							StatCollector.translateToLocal("commands.remove"));
+		SavedLists edit = new SavedLists(new ArrayList<>(),
+										 new LinkedList<>(),
+										 new LinkedList<>(),
+										 new ArrayList<>(),
+										 new LinkedList<>(blocksToRemove));
+		SavedLists undo = new SavedLists(new ArrayList<>(undoNonBlock),
+										 new LinkedList<>(undoBlock),
+										 new LinkedList<>(),
+										 new ArrayList<>(undoEntity),
+										 new LinkedList<>());
+		
+		editList.add(new QueueInfo("remove",
+								   selections,
+								   edit,
+								   undo,
+								   duplicateSavedList(edit),
+								   new int[SAVED_NUM],
+								   player));
 	}
 	
 	@Override
