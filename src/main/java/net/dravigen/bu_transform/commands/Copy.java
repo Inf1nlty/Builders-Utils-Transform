@@ -25,14 +25,14 @@ public class Copy extends CommandBase {
 		BlockPos pos1 = pos1PlayersMap.get(sender);
 		BlockPos pos2 = pos2PlayersMap.get(sender);
 		
-		if (strings.length == 0 && (pos1 == null || pos2 == null)) {
-			sendErrorMsg(sender, "commands.error.selection2");
+		if (strings.length != 2 && (pos1 == null || pos2 == null)) {
+			sendErrorMsg(sender, "bu.transform.commands.error.selection2");
 			
 			return;
 		}
 		
-		if (strings.length == 1 && strings[0].split("/").length != 3) {
-			sendErrorMsg(sender, "commands.error.format");
+		if (strings.length == 2 && (strings[0].split("/").length != 3 || strings[1].split("/").length != 3)) {
+			sendErrorMsg(sender, "bu.transform.commands.error.format");
 			
 			return;
 		}
@@ -107,7 +107,7 @@ public class Copy extends CommandBase {
 			}
 		}
 		
-		sendEditMsg(sender, "commands.copy", blockNum, entityNum);
+		sendEditMsg(sender, "bu.transform.commands.copy", blockNum, entityNum);
 	}
 	
 	@Override

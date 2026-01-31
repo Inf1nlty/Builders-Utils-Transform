@@ -23,7 +23,7 @@ public class Pos1 extends CommandBase {
 	public void processCommand(ICommandSender sender, String[] strings) {
 		try {
 			if (strings.length == 1 && strings[0].split("/").length != 3) {
-				sendErrorMsg(sender, "commands.error.format");
+				sendErrorMsg(sender, "bu.transform.commands.error.format");
 				
 				return;
 			}
@@ -40,9 +40,9 @@ public class Pos1 extends CommandBase {
 					: MathHelper.floor_double(player.posZ);
 			
 			pos1PlayersMap.put(player, new BlockPos(x, y, z));
-			PacketUtils.sendPosUpdate(1, sender, true);
+			PacketUtils.sendPosUpdate(1, (EntityPlayerMP) sender);
 			//pos1.set(x, y, z);
-			sendEditMsg(sender, "commands.pos1", x, y, z);
+			sendEditMsg(sender, "bu.transform.commands.pos1", x, y, z);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}

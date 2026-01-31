@@ -28,19 +28,19 @@ public class Paste extends CommandBase {
 			List<EntityInfo> copyEntity = copyEntityPlayersMap.get(sender);
 			
 			if (copyBlocks.isEmpty() && copyEntity.isEmpty()) {
-				sendErrorMsg(sender, "commands.error.copy/paste");
+				sendErrorMsg(sender, "bu.transform.commands.error.copy/paste");
 				
 				return;
 			}
 			
 			if (strings.length == 0) {
-				sendErrorMsg(sender, "commands.error.selection1");
+				sendErrorMsg(sender, "bu.transform.commands.error.selection1");
 				
 				return;
 			}
 			
 			if (strings.length == 1 && strings[0].split("/").length != 3) {
-				sendErrorMsg(sender, "commands.error.format");
+				sendErrorMsg(sender, "bu.transform.commands.error.format");
 				
 				return;
 			}
@@ -117,7 +117,7 @@ public class Paste extends CommandBase {
 									   new int[SAVED_NUM],
 									   player));
 			
-			sendEditMsg(sender, "commands.paste");
+			sendEditMsg(sender, "bu.transform.commands.paste");
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}

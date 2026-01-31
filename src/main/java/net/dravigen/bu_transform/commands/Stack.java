@@ -27,15 +27,19 @@ public class Stack extends CommandBase {
 			BlockPos pos2 = pos2PlayersMap.get(getPlayer(sender, sender.getCommandSenderName()));
 			
 			if (pos1 == null || pos2 == null) {
-				sendErrorMsg(sender, "commands.error.selectionArea");
+				sendErrorMsg(sender, "bu.transform.commands.error.selectionArea");
 				
 				return;
 			}
 			
 			if (strings.length == 1 && Arrays.stream(dir).noneMatch(s -> s.equalsIgnoreCase(strings[0]))) {
-				sendErrorMsg(sender, "commands.error.stack");
-				
-				return;
+				try {
+					Integer.parseInt(strings[0]);
+				} catch (NumberFormatException e) {
+					sendErrorMsg(sender, "bu.transform.commands.error.stack");
+					
+					return;
+				}
 			}
 			
 			redoPlayersMap.get(sender).clear();
@@ -233,7 +237,7 @@ public class Stack extends CommandBase {
 									   new int[SAVED_NUM],
 									   player));
 			
-			sendEditMsg(sender, "commands.stack", stackNum, direction);
+			sendEditMsg(sender, "bu.transform.commands.stack", stackNum, direction);
 		} catch (NumberFormatException e) {
 			throw new RuntimeException(e);
 		}

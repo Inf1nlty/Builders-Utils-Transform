@@ -2,6 +2,7 @@ package net.dravigen.bu_transform.commands;
 
 import net.dravigen.bu_transform.api.PacketUtils;
 import net.minecraft.src.CommandBase;
+import net.minecraft.src.EntityPlayerMP;
 import net.minecraft.src.ICommandSender;
 
 import java.util.ArrayList;
@@ -30,7 +31,7 @@ public class Undo extends CommandBase {
 				for (QueueInfo queueInfo : editList) {
 					if (queueInfo.id().equals(sender.getCommandSenderName() + "|undo") ||
 							queueInfo.id().equals(sender.getCommandSenderName() + "|redo")) {
-						sendErrorMsg(sender, "commands.error.process");
+						sendErrorMsg(sender, "bu.transform.commands.error.process");
 						
 						return;
 					}
@@ -46,8 +47,8 @@ public class Undo extends CommandBase {
 				if (selection.size() > 1) {
 					pos1PlayersMap.put(sender, selection.get(1).pos1());
 					pos2PlayersMap.put(sender, selection.get(1).pos2());
-					PacketUtils.sendPosUpdate(1, sender, true);
-					PacketUtils.sendPosUpdate(2, sender, true);
+					PacketUtils.sendPosUpdate(1, (EntityPlayerMP) sender);
+					PacketUtils.sendPosUpdate(2, (EntityPlayerMP) sender);
 				}
 				
 				redoList.add(new QueueInfo("redo",
@@ -58,10 +59,10 @@ public class Undo extends CommandBase {
 										   new int[SAVED_NUM],
 										   queueInfo.player()));
 				
-				sendEditMsg(sender, "commands.undo");
+				sendEditMsg(sender, "bu.transform.commands.undo");
 			}
 			else {
-				sendErrorMsg(sender, "commands.error.undo");
+				sendErrorMsg(sender, "bu.transform.commands.error.undo");
 			}
 		} catch (Exception e) {
 			throw new RuntimeException(e);

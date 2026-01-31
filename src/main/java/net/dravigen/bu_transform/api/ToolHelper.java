@@ -94,8 +94,7 @@ public class ToolHelper {
 	}
 	
 	public static void copyRemoveBlockSelection(int minY, int maxY, int minX, int maxX, int minZ, int maxZ, World world,
-			Queue<BlockInfo> undoBlock, Queue<BlockInfo> moveBlockList,
-			Queue<BlockToRemoveInfo> blocksToRemove) {
+			Queue<BlockInfo> undoBlock, Queue<BlockInfo> moveBlockList, Queue<BlockToRemoveInfo> blocksToRemove) {
 		for (int y = minY; y <= maxY; y++) {
 			for (int x = minX; x <= maxX; x++) {
 				for (int z = minZ; z <= maxZ; z++) {
@@ -233,7 +232,7 @@ public class ToolHelper {
 				i |= i1;
 			}
 			else {
-				i = currentBlock.rotateMetadataAroundYAxis(i, clockwise);
+				i = currentBlock.rotateMetadataAroundYAxis(i, !clockwise);
 			}
 		}
 		return i;
@@ -328,7 +327,7 @@ public class ToolHelper {
 	}
 	
 	public static void sendEditMsg(ICommandSender sender, String msg) {
-		ChatMessageComponent component = ChatMessageComponent.createFromTranslationKey("commands.prefix");
+		ChatMessageComponent component = ChatMessageComponent.createFromTranslationKey("bu.transform.commands.prefix");
 		
 		component.addKey(msg);
 		
@@ -336,7 +335,7 @@ public class ToolHelper {
 	}
 	
 	public static void sendEditMsg(ICommandSender sender, String msg, Object... args) {
-		ChatMessageComponent component = ChatMessageComponent.createFromTranslationKey("commands.prefix");
+		ChatMessageComponent component = ChatMessageComponent.createFromTranslationKey("bu.transform.commands.prefix");
 		
 		ChatMessageComponent core = ChatMessageComponent.createFromTranslationWithSubstitutions(msg, args);
 		

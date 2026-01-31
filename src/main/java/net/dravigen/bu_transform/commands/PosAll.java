@@ -3,6 +3,7 @@ package net.dravigen.bu_transform.commands;
 import api.world.BlockPos;
 import net.dravigen.bu_transform.api.PacketUtils;
 import net.minecraft.src.CommandBase;
+import net.minecraft.src.EntityPlayerMP;
 import net.minecraft.src.ICommandSender;
 import net.minecraft.src.MovingObjectPosition;
 
@@ -25,13 +26,13 @@ public class PosAll extends CommandBase {
 	public void processCommand(ICommandSender sender, String[] strings) {
 		try {
 			if (strings.length != 2) {
-				sendErrorMsg(sender, "commands.error.selection2");
+				sendErrorMsg(sender, "bu.transform.commands.error.selection2");
 				
 				return;
 			}
 			
 			if (strings[0].split("/").length != 3 || strings[1].split("/").length != 3) {
-				sendErrorMsg(sender, "commands.error.format");
+				sendErrorMsg(sender, "bu.transform.commands.error.format");
 				
 				return;
 			}
@@ -45,12 +46,12 @@ public class PosAll extends CommandBase {
 			
 			pos1PlayersMap.put(sender, new BlockPos(x1, y1, z1));
 			pos2PlayersMap.put(sender, new BlockPos(x2, y2, z2));
-			PacketUtils.sendPosUpdate(1, sender, true);
-			PacketUtils.sendPosUpdate(2, sender, true);
+			PacketUtils.sendPosUpdate(1, (EntityPlayerMP) sender);
+			PacketUtils.sendPosUpdate(2, (EntityPlayerMP) sender);
 			
 			//pos1.set(x1, y1, z1);
 			//pos2.set(x2, y2, z2);
-			sendEditMsg(sender, "commands.posAll", x1, y1, z1, x2, y2, z2);
+			sendEditMsg(sender, "bu.transform.commands.posAll", x1, y1, z1, x2, y2, z2);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}

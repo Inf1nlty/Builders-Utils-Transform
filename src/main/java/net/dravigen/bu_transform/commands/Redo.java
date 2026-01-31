@@ -2,6 +2,7 @@ package net.dravigen.bu_transform.commands;
 
 import net.dravigen.bu_transform.api.PacketUtils;
 import net.minecraft.src.CommandBase;
+import net.minecraft.src.EntityPlayerMP;
 import net.minecraft.src.ICommandSender;
 
 import java.util.List;
@@ -29,7 +30,7 @@ public class Redo extends CommandBase {
 				for (QueueInfo queueInfo : editList) {
 					if (queueInfo.id().equals(sender.getCommandSenderName() + "|undo") ||
 							queueInfo.id().equals(sender.getCommandSenderName() + "|redo")) {
-						sendErrorMsg(sender, "commands.error.process");
+						sendErrorMsg(sender, "bu.transform.commands.error.process");
 						
 						return;
 					}
@@ -44,14 +45,14 @@ public class Redo extends CommandBase {
 				if (selection.size() > 1) {
 					pos1PlayersMap.put(sender, selection.get(1).pos1());
 					pos2PlayersMap.put(sender, selection.get(1).pos2());
-					PacketUtils.sendPosUpdate(1, sender, true);
-					PacketUtils.sendPosUpdate(2, sender, true);
+					PacketUtils.sendPosUpdate(1, (EntityPlayerMP) sender);
+					PacketUtils.sendPosUpdate(2, (EntityPlayerMP) sender);
 				}
 				
-				sendEditMsg(sender, "commands.redo");
+				sendEditMsg(sender, "bu.transform.commands.redo");
 			}
 			else {
-				sendErrorMsg(sender, "commands.error.redo");
+				sendErrorMsg(sender, "bu.transform.commands.error.redo");
 			}
 		} catch (Exception e) {
 			throw new RuntimeException(e);

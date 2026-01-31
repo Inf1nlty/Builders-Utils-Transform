@@ -33,8 +33,8 @@ public abstract class EntityClientPlayerMPMixin extends EntityPlayer {
 		if (heldItem == null) return;
 		
 		if (heldItem.getItem() == Item.axeWood && this.capabilities.isCreativeMode) {
-			String pos1 = "commands.pos1";
-			String pos2 = "commands.pos2";
+			String pos1 = "bu.transform.commands.pos1";
+			String pos2 = "bu.transform.commands.pos2";
 			
 			BlockPos blockPos = null;
 			
@@ -48,28 +48,28 @@ public abstract class EntityClientPlayerMPMixin extends EntityPlayer {
 						// left
 						if (ToolHelper.pos1 != null && block == null || this.isSneaking()) {
 							ToolHelper.pos1 = null;
-							sendEditMsg(this, "commands.pos1.reset");
-							PacketUtils.sendPosUpdate(3, this, false);
+							sendEditMsg(this, "bu.transform.commands.pos1.reset");
+							PacketUtils.sendPosUpdate(3);
 						}
 						
 						if (block != null) {
 							ToolHelper.pos1 = blockPos;
 							sendEditMsg(this, pos1, blockPos.x, blockPos.y, blockPos.z);
-							PacketUtils.sendPosUpdate(1, this, false);
+							PacketUtils.sendPosUpdate(1);
 						}
 					}
 					else if (Mouse.isButtonDown(1)) {
 						// right
 						if (ToolHelper.pos2 != null && block == null || this.isSneaking()) {
 							ToolHelper.pos2 = null;
-							sendEditMsg(this, "commands.pos2.reset");
-							PacketUtils.sendPosUpdate(4, this, false);
+							sendEditMsg(this, "bu.transform.commands.pos2.reset");
+							PacketUtils.sendPosUpdate(4);
 						}
 						
 						if (block != null) {
 							ToolHelper.pos2 = blockPos;
 							sendEditMsg(this, pos2, blockPos.x, blockPos.y, blockPos.z);
-							PacketUtils.sendPosUpdate(2, this, false);
+							PacketUtils.sendPosUpdate(2);
 						}
 					}
 					
@@ -82,12 +82,12 @@ public abstract class EntityClientPlayerMPMixin extends EntityPlayer {
 						if (this.isUsingSpecialKey()) {
 							ToolHelper.pos2 = blockPos;
 							sendEditMsg(this, pos2, blockPos.x, blockPos.y, blockPos.z);
-							PacketUtils.sendPosUpdate(2, this, false);
+							PacketUtils.sendPosUpdate(2);
 						}
 						else {
 							ToolHelper.pos1 = blockPos;
 							sendEditMsg(this, pos1, blockPos.x, blockPos.y, blockPos.z);
-							PacketUtils.sendPosUpdate(1, this, false);
+							PacketUtils.sendPosUpdate(1);
 						}
 					}
 				}

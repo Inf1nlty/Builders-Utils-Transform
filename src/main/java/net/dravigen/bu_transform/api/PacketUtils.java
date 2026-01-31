@@ -4,7 +4,7 @@ import api.world.BlockPos;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.src.EntityPlayer;
-import net.minecraft.src.ICommandSender;
+import net.minecraft.src.EntityPlayerMP;
 import net.minecraft.src.Minecraft;
 import net.minecraft.src.Packet250CustomPayload;
 
@@ -15,7 +15,8 @@ import static net.dravigen.bu_transform.api.ToolHelper.*;
 public class PacketUtils {
 	public static final String POS_SYNC = "BUT:pos";
 	
-	public static void sendPosUpdate(int pos, ICommandSender sender, boolean isServer) {
+	@Environment(EnvType.CLIENT)
+	public static void sendPosUpdate(int pos) {
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		DataOutputStream dos = new DataOutputStream(bos);
 		
@@ -23,30 +24,14 @@ public class PacketUtils {
 			dos.writeInt(pos);
 			
 			if (pos == 1) {
-				if (isServer) {
-					BlockPos blockPos = pos1PlayersMap.get(sender);
-					dos.writeInt(blockPos.x);
-					dos.writeInt(blockPos.y);
-					dos.writeInt(blockPos.z);
-				}
-				else {
-					dos.writeInt(pos1.x);
-					dos.writeInt(pos1.y);
-					dos.writeInt(pos1.z);
-				}
+				dos.writeInt(pos1.x);
+				dos.writeInt(pos1.y);
+				dos.writeInt(pos1.z);
 			}
 			else if (pos == 2) {
-				if (isServer) {
-					BlockPos blockPos = pos2PlayersMap.get(sender);
-					dos.writeInt(blockPos.x);
-					dos.writeInt(blockPos.y);
-					dos.writeInt(blockPos.z);
-				}
-				else {
-					dos.writeInt(pos2.x);
-					dos.writeInt(pos2.y);
-					dos.writeInt(pos2.z);
-				}
+				dos.writeInt(pos2.x);
+				dos.writeInt(pos2.y);
+				dos.writeInt(pos2.z);
 			}
 		} catch (IOException e) {
 			throw new RuntimeException(e);
@@ -56,6 +41,35 @@ public class PacketUtils {
 		
 		Minecraft.getMinecraft().getNetHandler().addToSendQueue(packet);
 	}
+	
+	public static void sendPosUpdate(int pos, EntityPlayerMP playerMP) {
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		DataOutputStream dos = new DataOutputStream(bos);
+		
+		try {
+			dos.writeInt(pos);
+			
+			if (pos == 1) {
+				BlockPos blockPos = pos1PlayersMap.get(playerMP);
+				dos.writeInt(blockPos.x);
+				dos.writeInt(blockPos.y);
+				dos.writeInt(blockPos.z);
+			}
+			else if (pos == 2) {
+				BlockPos blockPos = pos2PlayersMap.get(playerMP);
+				dos.writeInt(blockPos.x);
+				dos.writeInt(blockPos.y);
+				dos.writeInt(blockPos.z);
+			}
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		
+		Packet250CustomPayload packet = new Packet250CustomPayload(POS_SYNC, bos.toByteArray());
+		
+		playerMP.playerNetServerHandler.sendPacketToPlayer(packet);
+	}
+	
 	
 	public static void handlePosUpdateS(Packet250CustomPayload packet, EntityPlayer player) {
 		try {

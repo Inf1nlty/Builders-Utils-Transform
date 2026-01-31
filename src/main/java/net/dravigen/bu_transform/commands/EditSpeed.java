@@ -21,7 +21,7 @@ public class EditSpeed extends CommandBase {
 	public void processCommand(ICommandSender iCommandSender, String[] strings) {
 		try {
 			if (strings.length == 0) {
-				ToolHelper.sendEditMsg(iCommandSender, "commands.editSpeed", BU_Transform.SPEED);
+				ToolHelper.sendEditMsg(iCommandSender, "bu.transform.commands.editSpeed", BU_Transform.SPEED);
 				
 				return;
 			}
@@ -30,7 +30,7 @@ public class EditSpeed extends CommandBase {
 			ConfigUpdater.updateValue(BU_Transform.instance.addonConfig, "bu_tr.editSpeed", value);
 			BU_Transform.SPEED = value;
 			
-			ToolHelper.sendEditMsg(iCommandSender, "Updated edit speed to: " + value);
+			ToolHelper.sendEditMsg(iCommandSender, "bu.transform.commands.editSpeed", value);
 		} catch (NumberFormatException e) {
 			throw new RuntimeException(e);
 		}

@@ -29,19 +29,19 @@ public class Move extends CommandBase {
 			BlockPos pos2 = pos2PlayersMap.get(sender);
 			
 			if (pos1 == null || pos2 == null) {
-				sendErrorMsg(sender, "commands.error.selectionArea");
+				sendErrorMsg(sender, "bu.transform.commands.error.selectionArea");
 				
 				return;
 			}
 			
 			if (strings.length == 1) {
-				sendErrorMsg(sender, "commands.error.selection1");
+				sendErrorMsg(sender, "bu.transform.commands.error.selection1");
 				
 				return;
 			}
 			
 			if (strings.length == 2 && strings[1].split("/").length != 3) {
-				sendErrorMsg(sender, "commands.error.format");
+				sendErrorMsg(sender, "bu.transform.commands.error.format");
 				
 				return;
 			}
@@ -120,7 +120,8 @@ public class Move extends CommandBase {
 									 maxX,
 									 minZ,
 									 maxZ,
-									 world, undoBlock1,
+									 world,
+									 undoBlock1,
 									 moveBlockList,
 									 blocksToRemove);
 			
@@ -152,8 +153,8 @@ public class Move extends CommandBase {
 			
 			pos1PlayersMap.put(sender, new BlockPos(minX, minY, minZ));
 			pos2PlayersMap.put(sender, new BlockPos(maxX, maxY, maxZ));
-			PacketUtils.sendPosUpdate(1, sender, true);
-			PacketUtils.sendPosUpdate(2, sender, true);
+			PacketUtils.sendPosUpdate(1, (EntityPlayerMP) sender);
+			PacketUtils.sendPosUpdate(2, (EntityPlayerMP) sender);
 			
 			Selection selection2 = new Selection(pos1, pos2);
 			
@@ -185,7 +186,7 @@ public class Move extends CommandBase {
 									   new int[SAVED_NUM],
 									   player));
 			
-			sendEditMsg(sender, "commands.move");
+			sendEditMsg(sender, "bu.transform.commands.move");
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
