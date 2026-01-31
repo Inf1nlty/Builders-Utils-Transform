@@ -8,7 +8,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Queue;
 
@@ -25,31 +24,45 @@ public abstract class MinecraftServerMixin {
 		Chunk chunk = world.getChunkFromChunkCoords(x >> 4, z >> 4);
 		
 		try {
-			ExtendedBlockStorage storage = ((ExtendedBlockStorage[]) storageArraysField.get(chunk))[y >> 4];
+			ExtendedBlockStorage storage = chunk.getBlockStorageArray()[y >> 4];
 			
 			storage.setExtBlockID(x & 0xF, y & 0xF, z & 0xF, 0);
-			//world.updateAllLightTypes(x, y, z);
 			world.markBlockForUpdate(x, y, z);
 			
 			int var7 = chunk.heightMap[z & 0xF << 4 | x & 0xF];
 			
-			Method relightBlock = chunk.getClass().getDeclaredMethod("relightBlock", int.class, int.class, int.class);
-			relightBlock.setAccessible(true);
-			
-			Method propagateSkylightOcclusion = chunk.getClass()
-					.getDeclaredMethod("propagateSkylightOcclusion", int.class, int.class);
-			propagateSkylightOcclusion.setAccessible(true);
-			
 			if (y == var7 - 1) {
-				relightBlock.invoke(chunk, x & 0xF, y, z & 0xF);
+				chunk.relightBlock(x & 0xF, y, z & 0xF);
 			}
-			propagateSkylightOcclusion.invoke(chunk, x & 0xF, z & 0xF);
+			chunk.propagateSkylightOcclusion(x & 0xF, z & 0xF);
 			
 			if (hasTile) world.removeBlockTileEntity(x, y, z);
 		} catch (Exception e) {
 			world.setBlock(x, y, z, 0, 0, 2);
 			
 			if (hasTile) world.removeBlockTileEntity(x, y, z);
+		}
+	}
+	
+	@Unique
+	private static void setBlock(World world, int x, int y, int z, BlockInfo block) {
+		Chunk chunk = world.getChunkFromChunkCoords(x >> 4, z >> 4);
+		
+		try {
+			ExtendedBlockStorage storage = chunk.getBlockStorageArray()[y >> 4];
+			
+			storage.setExtBlockID(x & 0xF, y & 0xF, z & 0xF, block.id());
+			storage.setExtBlockMetadata(x & 0xF, y & 0xF, z & 0xF, block.meta());
+			world.markBlockForUpdate(x, y, z);
+			
+			int var7 = chunk.heightMap[z & 0xF << 4 | x & 0xF];
+			
+			if (y == var7 - 1) {
+				chunk.relightBlock(x & 0xF, y, z & 0xF);
+			}
+			chunk.propagateSkylightOcclusion(x & 0xF, z & 0xF);
+		} catch (Exception e) {
+			world.setBlock(x, y, z, block.id(), block.meta(), 2);
 		}
 	}
 	
@@ -87,8 +100,11 @@ public abstract class MinecraftServerMixin {
 			int speed = SPEED;
 			
 			if (queueInfo.id().contains("redo") || queueInfo.id().contains("undo")) {
-				speed = SPEED * 10;
+				speed = SPEED * 3;
 			}
+			
+			int removeSpeed = SPEED * 5;
+			int finalSpeed = SPEED * 5;
 			
 			EntityPlayer player = queueInfo.player();
 			World world = player.getEntityWorld();
@@ -127,7 +143,7 @@ public abstract class MinecraftServerMixin {
 			}
 			
 			if (!removeList.isEmpty()) {
-				for (int i = 0; i < SPEED * 5; i++) {
+				for (int i = 0; i < removeSpeed; i++) {
 					if (removeList.isEmpty()) break;
 					BlockToRemoveInfo info = removeList.poll();
 					
@@ -175,7 +191,7 @@ public abstract class MinecraftServerMixin {
 							if (block.id() == 0) num[2]++;
 							else num[0]++;
 							
-							world.setBlock(x, y, z, block.id(), block.meta(), 2);
+							setBlock(world, x, y, z, block);
 							pasteTile(block, world, x, y, z);
 						} catch (Exception ignored) {
 						
@@ -204,7 +220,7 @@ public abstract class MinecraftServerMixin {
 							}
 							
 							num[0]++;
-							world.setBlock(x, y, z, block.id(), block.meta(), 2);
+							setBlock(world, x, y, z, block);
 							
 							pasteTile(block, world, x, y, z);
 						} catch (Exception ignored) {
@@ -216,7 +232,7 @@ public abstract class MinecraftServerMixin {
 				}
 				
 				if (isNonBlockEmpty && isBlockEmpty && allBlocks != null) {
-					for (int i = 0; i < SPEED * 5; i++) {
+					for (int i = 0; i < finalSpeed; i++) {
 						if (allBlocks.isEmpty()) break;
 						
 						BlockInfo block = allBlocks.poll();
@@ -235,7 +251,7 @@ public abstract class MinecraftServerMixin {
 							if (block.id() == 0) num[2]++;
 							else num[0]++;
 							
-							world.setBlock(x, y, z, block.id(), block.meta(), 2);
+							setBlock(world, x, y, z, block);
 							pasteTile(block, world, x, y, z);
 						} catch (Exception ignored) {
 						
@@ -341,9 +357,16 @@ public abstract class MinecraftServerMixin {
 					int maxZ = Math.max(z1, z2);
 					
 					for (int y = minY; y <= maxY; y++) {
-						for (int x = minX; x <= maxX; x++) {
+						for (int x = minX - 1; x <= maxX; x++) {
 							for (int z = minZ; z <= maxZ; z++) {
-								world.markBlockForUpdate(x, y, z);
+								//world.scheduleBlockUpdate(x, y, z, world.getBlockId(x, y, z), 1);
+								world.notifyBlockChange(x, y, z, world.getBlockId(x, y, z));
+							/*
+								Block block = Block.blocksList[world.getBlockId(x, y, z)];
+								
+								if (block != null) {
+									block.updateTick(world, x, y, z, new Random());
+								}*/
 							}
 						}
 					}

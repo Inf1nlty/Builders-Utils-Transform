@@ -1,6 +1,7 @@
 package net.dravigen.bu_transform.commands;
 
 import api.world.BlockPos;
+import net.dravigen.bu_transform.api.PacketUtils;
 import net.minecraft.src.*;
 
 import java.util.ArrayList;
@@ -33,12 +34,6 @@ public class Paste extends CommandBase {
 				return;
 			}
 			
-			if (strings.length == 0) {
-				sendErrorMsg(sender, "bu.transform.commands.error.selection1");
-				
-				return;
-			}
-			
 			if (strings.length == 1 && strings[0].split("/").length != 3) {
 				sendErrorMsg(sender, "bu.transform.commands.error.format");
 				
@@ -64,6 +59,7 @@ public class Paste extends CommandBase {
 			List<EntityInfo> entities = new ArrayList<>();
 			
 			Queue<BlockInfo> undoBlock = new LinkedList<>();
+			List<BlockInfo> undoNonBlock = new ArrayList<>();
 			List<EntityInfo> undoEntity = new ArrayList<>();
 			
 			int minX = Integer.MAX_VALUE;
@@ -88,7 +84,7 @@ public class Paste extends CommandBase {
 				maxZ = Math.max(maxZ, z);
 				
 				saveBlockToPlace(info, x, y, z, world, nonBlockList, blockList);
-				saveBlockReplaced(world, x, y, z, undoBlock);
+				saveBlockReplaced(world, x, y, z, undoBlock, undoNonBlock);
 			}
 			
 			Selection selection = new Selection(new BlockPos(minX, minY, minZ), new BlockPos(maxX, maxY, maxZ));
@@ -102,12 +98,17 @@ public class Paste extends CommandBase {
 											 new LinkedList<>(),
 											 new ArrayList<>(entities),
 											 new LinkedList<>());
-			SavedLists undo = new SavedLists(new ArrayList<>(),
+			SavedLists undo = new SavedLists(new ArrayList<>(undoNonBlock),
 											 new LinkedList<>(undoBlock),
 											 new LinkedList<>(),
 											 new ArrayList<>(undoEntity),
 											 new LinkedList<>());
 			Result result = new Result(edit, undo);
+			
+			pos1PlayersMap.put(sender, selection.pos1());
+			pos2PlayersMap.put(sender, selection.pos2());
+			PacketUtils.sendPosUpdate(1, (EntityPlayerMP) sender);
+			PacketUtils.sendPosUpdate(2, (EntityPlayerMP) sender);
 			
 			editList.add(new QueueInfo("paste",
 									   selections,

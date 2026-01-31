@@ -41,7 +41,6 @@ public class Pos1 extends CommandBase {
 			
 			pos1PlayersMap.put(player, new BlockPos(x, y, z));
 			PacketUtils.sendPosUpdate(1, (EntityPlayerMP) sender);
-			//pos1.set(x, y, z);
 			sendEditMsg(sender, "bu.transform.commands.pos1", x, y, z);
 		} catch (Exception e) {
 			throw new RuntimeException(e);

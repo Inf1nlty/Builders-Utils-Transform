@@ -76,18 +76,29 @@ public class Cut extends CommandBase {
 																											maxZ + 1));
 			Queue<BlockToRemoveInfo> blocksToRemove = new LinkedList<>();
 			Queue<BlockInfo> undoBlock = new LinkedList<>();
+			List<BlockInfo> undoNonBlock = new ArrayList<>();
 			List<EntityInfo> undoEntity = new ArrayList<>();
 			
 			copyEntityInSelection(entitiesInSelection, copyEntity, minX, minY, minZ, undoEntity);
 			
-			copyRemoveBlockSelection(minY, maxY, minX, maxX, minZ, maxZ, world, undoBlock, copyBlocks, blocksToRemove);
+			copyRemoveBlockSelection(minY,
+									 maxY,
+									 minX,
+									 maxX,
+									 minZ,
+									 maxZ,
+									 world,
+									 undoBlock,
+									 undoNonBlock,
+									 copyBlocks,
+									 blocksToRemove);
 			sendEditMsg(sender, "bu.transform.commands.cut");
 			SavedLists edit = new SavedLists(new ArrayList<>(),
 											 new LinkedList<>(),
 											 new LinkedList<>(),
 											 new ArrayList<>(),
 											 new LinkedList<>(blocksToRemove));
-			SavedLists undo = new SavedLists(new ArrayList<>(),
+			SavedLists undo = new SavedLists(new ArrayList<>(undoNonBlock),
 											 new LinkedList<>(undoBlock),
 											 new LinkedList<>(),
 											 new ArrayList<>(undoEntity),

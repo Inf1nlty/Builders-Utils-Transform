@@ -42,17 +42,18 @@ public class Undo extends CommandBase {
 				undoList.remove(undoList.size() - 1);
 				editList.add(queueInfo);
 				
-				List<Selection> selection = queueInfo.selection();
+				List<Selection> selections = queueInfo.selection();
 				
-				if (selection.size() > 1) {
-					pos1PlayersMap.put(sender, selection.get(1).pos1());
-					pos2PlayersMap.put(sender, selection.get(1).pos2());
+				if (selections.size() > 1) {
+					pos1PlayersMap.put(sender, selections.get(1).pos1());
+					pos2PlayersMap.put(sender, selections.get(1).pos2());
 					PacketUtils.sendPosUpdate(1, (EntityPlayerMP) sender);
 					PacketUtils.sendPosUpdate(2, (EntityPlayerMP) sender);
 				}
 				
+				
 				redoList.add(new QueueInfo("redo",
-										   new ArrayList<>(selection),
+										   new ArrayList<>(selections),
 										   duplicateSavedList(queueInfo.redoList()),
 										   duplicateSavedList(queueInfo.editList()),
 										   duplicateSavedList(queueInfo.redoList()),

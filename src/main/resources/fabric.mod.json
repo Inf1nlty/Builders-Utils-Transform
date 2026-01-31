@@ -27,6 +27,7 @@
   "mixins": [
     "bu_transform.mixins.json"
   ],
+  "accessWidener": "BU_Transform.accessWidener",
   "depends": {
     "fabricloader": ">=0.14.19",
     "minecraft": "1.6.4"

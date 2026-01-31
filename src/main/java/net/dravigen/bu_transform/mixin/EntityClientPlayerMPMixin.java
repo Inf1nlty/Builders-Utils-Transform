@@ -77,7 +77,7 @@ public abstract class EntityClientPlayerMPMixin extends EntityPlayer {
 					if (Mouse.isButtonDown(2)) {
 						// middle
 						blockPos = new BlockPos(MathHelper.floor_double(this.posX),
-												MathHelper.floor_double(this.posY),
+												MathHelper.floor_double(this.boundingBox.minY),
 												MathHelper.floor_double(this.posZ));
 						if (this.isUsingSpecialKey()) {
 							ToolHelper.pos2 = blockPos;

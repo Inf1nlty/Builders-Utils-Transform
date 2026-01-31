@@ -39,6 +39,7 @@ loom {
 	addMinecraftJarProcessor(
 			BTWJarReplacer, "BTWJarReplacer", projectDir.toString()
 	)
+    accessWidenerPath = file("src/main/resources/BU_Transform.accesswidener")
 }
 
 def lwjglVersion = System.getProperty("os.name").toLowerCase().contains("mac") ? "2.9.1" : "2.9.0"

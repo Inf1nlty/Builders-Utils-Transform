@@ -74,9 +74,6 @@ public class Move extends CommandBase {
 					 ? MathHelper.floor_double(player.posZ)
 					 : Integer.parseInt(strings[1].split("/")[2]) + (strings[0].equalsIgnoreCase("add") ? minZ : 0);
 			
-			Selection selection1 = new Selection(new BlockPos(minX, minY, minZ), new BlockPos(maxX, maxY, maxZ));
-			
-			
 			List<EntityInfo> entities = new ArrayList<>();
 			List<Entity> entitiesInSelection = world.getEntitiesWithinAABBExcludingEntity(player,
 																						  new AxisAlignedBB(minX,
@@ -89,6 +86,7 @@ public class Move extends CommandBase {
 			Queue<BlockInfo> moveBlockList = new LinkedList<>();
 			
 			Queue<BlockInfo> undoBlock1 = new LinkedList<>();
+			List<BlockInfo> undoNonBlock1 = new ArrayList<>();
 			List<EntityInfo> undoEntity1 = new ArrayList<>();
 			List<BlockInfo> undoNonBlock = new ArrayList<>();
 			Queue<BlockInfo> undoBlock = new LinkedList<>();
@@ -122,6 +120,7 @@ public class Move extends CommandBase {
 									 maxZ,
 									 world,
 									 undoBlock1,
+									 undoNonBlock1,
 									 moveBlockList,
 									 blocksToRemove);
 			
@@ -148,19 +147,21 @@ public class Move extends CommandBase {
 				maxZ = Math.max(maxZ, z);
 				
 				saveBlockToPlace(info, x, y, z, world, nonBlockList, blockList);
-				saveBlockReplaced(world, x, y, z, undoBlock);
+				saveBlockReplaced(world, x, y, z, undoBlock, undoNonBlock);
 			}
 			
-			pos1PlayersMap.put(sender, new BlockPos(minX, minY, minZ));
-			pos2PlayersMap.put(sender, new BlockPos(maxX, maxY, maxZ));
+			Selection selection1 = new Selection(new BlockPos(minX, minY, minZ), new BlockPos(maxX, maxY, maxZ));
+			Selection selection2 = new Selection(pos1, pos2);
+			
+			pos1PlayersMap.put(sender, selection1.pos1());
+			pos2PlayersMap.put(sender, selection1.pos2());
 			PacketUtils.sendPosUpdate(1, (EntityPlayerMP) sender);
 			PacketUtils.sendPosUpdate(2, (EntityPlayerMP) sender);
-			
-			Selection selection2 = new Selection(pos1, pos2);
 			
 			saveReplacedEntities(world, player, selection2, undoEntity);
 			
 			undoBlock.addAll(undoBlock1);
+			undoNonBlock.addAll(undoNonBlock1);
 			undoEntity.addAll(undoEntity1);
 			
 			SavedLists edit = new SavedLists(new ArrayList<>(nonBlockList),

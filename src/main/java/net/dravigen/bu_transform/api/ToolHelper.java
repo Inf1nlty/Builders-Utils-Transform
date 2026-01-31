@@ -6,13 +6,11 @@ import btw.block.blocks.ButtonBlock;
 import net.minecraft.src.*;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.reflect.Field;
 import java.util.*;
 
 import static net.minecraft.src.CommandBase.getPlayer;
 
 public class ToolHelper {
-	public static final Field storageArraysField;
 	public static int SAVED_NUM = 4;
 	public static BlockPos pos1 = null;
 	public static BlockPos pos2 = null;
@@ -24,22 +22,6 @@ public class ToolHelper {
 	public static Map<ICommandSender, BlockPos> pos2PlayersMap = new HashMap<>();
 	public static Map<ICommandSender, List<QueueInfo>> undoPlayersMap = new HashMap<>();
 	public static Map<ICommandSender, List<QueueInfo>> redoPlayersMap = new HashMap<>();
-	
-	static {
-		Field f = null;
-		
-		try {
-			try {
-				f = Chunk.class.getDeclaredField("storageArrays");
-				f.setAccessible(true);
-			} catch (NoSuchFieldException ignored) {
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
-		storageArraysField = f;
-	}
 	
 	public static SavedLists duplicateSavedList(SavedLists old) {
 		return new SavedLists(new ArrayList<>(old.nonBlockList),
@@ -94,35 +76,56 @@ public class ToolHelper {
 	}
 	
 	public static void copyRemoveBlockSelection(int minY, int maxY, int minX, int maxX, int minZ, int maxZ, World world,
-			Queue<BlockInfo> undoBlock, Queue<BlockInfo> moveBlockList, Queue<BlockToRemoveInfo> blocksToRemove) {
+			Queue<BlockInfo> undoBlock, List<BlockInfo> undoNonBlock, Queue<BlockInfo> moveBlockList,
+			Queue<BlockToRemoveInfo> blocksToRemove) {
 		for (int y = minY; y <= maxY; y++) {
 			for (int x = minX; x <= maxX; x++) {
 				for (int z = minZ; z <= maxZ; z++) {
-					getBlocksInfo result = getGetBlocksInfo(world, x, y, z);
-					
+					BlockInfoNoTile info = getGetBlocksInfo(world, x, y, z);
 					NBTTagCompound nbt = null;
 					
-					if (result.tile() != null) {
+					if (info.tile() != null) {
 						nbt = new NBTTagCompound();
-						result.tile().writeToNBT(nbt);
+						info.tile().writeToNBT(nbt);
 						nbt.removeTag("x");
 						nbt.removeTag("y");
 						nbt.removeTag("z");
 					}
 					
-					BlockInfo pasteInfo = new BlockInfo(x, y, z, result.id(), result.meta(), nbt);
+					BlockInfo blockInfo = new BlockInfo(x, y, z, info.id(), info.meta(), nbt);
 					
-					undoBlock.add(pasteInfo);
+					//undoBlock.add(blockInfo);
 					
-					moveBlockList.add(new BlockInfo(x - minX, y - minY, z - minZ, result.id(), result.meta(), nbt));
 					
-					blocksToRemove.add(new BlockToRemoveInfo(x, y, z, result.tile() != null));
+					addBlockOrNonBlock(world, undoBlock, undoNonBlock, blockInfo);
+					
+					moveBlockList.add(new BlockInfo(x - minX, y - minY, z - minZ, info.id(), info.meta(), nbt));
+					
+					blocksToRemove.add(new BlockToRemoveInfo(x, y, z, info.tile() != null));
 				}
 			}
 		}
 	}
 	
-	public static @NotNull getBlocksInfo getGetBlocksInfo(World world, int x, int y, int z) {
+	public static void addBlockOrNonBlock(World world, Queue<BlockInfo> blockList, List<BlockInfo> nonBlockList,
+			BlockInfo blockInfo) {
+		Block block = Block.blocksList[blockInfo.id()];
+		
+		if (block != null) {
+			
+			if ((!block.canPlaceBlockOnSide(world, 0, 254, 0, 1) ||
+					block instanceof BlockFluid ||
+					block.isFallingBlock() ||
+					!block.canPlaceBlockAt(world, 0, 254, 0))) {
+				nonBlockList.add(blockInfo);
+			}
+			//if (block instanceof BlockFluid || block.isFallingBlock()) nonBlockList.add(blockInfo);
+			else blockList.add(blockInfo);
+		}
+		else blockList.add(blockInfo);
+	}
+	
+	public static @NotNull ToolHelper.BlockInfoNoTile getGetBlocksInfo(World world, int x, int y, int z) {
 		int id = world.getBlockId(x, y, z);
 		int meta = world.getBlockMetadata(x, y, z);
 		TileEntity tile = world.getBlockTileEntity(x, y, z);
@@ -131,7 +134,7 @@ public class ToolHelper {
 			id = BTWBlocks.axle.blockID;
 		}
 		
-		return new getBlocksInfo(id, meta, tile);
+		return new BlockInfoNoTile(id, meta, tile);
 	}
 	
 	public static int rotateBlock(int id, int meta, boolean clockwise, TileEntity tile, NBTTagCompound nbt) {
@@ -259,46 +262,33 @@ public class ToolHelper {
 		}
 	}
 	
-	public static void saveBlockReplaced(World world, int x, int y, int z, Queue<BlockInfo> undoBlock) {
-		getBlocksInfo result = getGetBlocksInfo(world, x, y, z);
-		int id = result.id;
-		int meta = result.meta;
-		TileEntity tile = result.tile;
+	public static void saveBlockReplaced(World world, int x, int y, int z, Queue<BlockInfo> undoBlock,
+			List<BlockInfo> undoNonBlock) {
+		BlockInfoNoTile info = getGetBlocksInfo(world, x, y, z);
 		NBTTagCompound nbt = null;
 		
-		if (tile != null) {
+		if (info.tile() != null) {
 			nbt = new NBTTagCompound();
-			tile.writeToNBT(nbt);
+			info.tile().writeToNBT(nbt);
 			nbt.removeTag("x");
 			nbt.removeTag("y");
 			nbt.removeTag("z");
 		}
 		
-		BlockInfo pasteInfoUndo = new BlockInfo(x, y, z, id, meta, nbt);
+		BlockInfo blockInfo = new BlockInfo(x, y, z, info.id(), info.meta(), nbt);
 		
-		undoBlock.add(pasteInfoUndo);
+		//undoBlock.add(blockInfo);
+		
+		addBlockOrNonBlock(world, undoBlock, undoNonBlock, blockInfo);
 	}
 	
 	public static void saveBlockToPlace(BlockInfo info, int x, int y, int z, World world, List<BlockInfo> nonBlockList,
 			Queue<BlockInfo> blockList) {
-		BlockInfo pasteInfo = new BlockInfo(x, y, z, info.id(), info.meta(), info.tile());
+		BlockInfo blockInfo = new BlockInfo(x, y, z, info.id(), info.meta(), info.tile());
 		
-		Block block = Block.blocksList[info.id()];
+		//blockList.add(blockInfo);
 		
-		if (block != null) {
-			if ((!block.canPlaceBlockOnSide(world, 0, 254, 0, 1) ||
-					block instanceof BlockFluid ||
-					block.isFallingBlock() ||
-					!block.canPlaceBlockAt(world, 0, 254, 0))) {
-				nonBlockList.add(pasteInfo);
-			}
-			else {
-				blockList.add(pasteInfo);
-			}
-		}
-		else {
-			blockList.add(pasteInfo);
-		}
+		addBlockOrNonBlock(world, blockList, nonBlockList, blockInfo);
 	}
 	
 	public static MovingObjectPosition getBlockSenderIsLooking(ICommandSender sender) {
@@ -365,5 +355,5 @@ public class ToolHelper {
 	
 	public record BlockPosD(double x, double y, double z) {}
 	
-	public record getBlocksInfo(int id, int meta, TileEntity tile) {}
+	public record BlockInfoNoTile(int id, int meta, TileEntity tile) {}
 }

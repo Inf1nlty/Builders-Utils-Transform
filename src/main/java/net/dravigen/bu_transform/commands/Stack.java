@@ -133,7 +133,7 @@ public class Stack extends CommandBase {
 			for (int y = minY; y <= maxY; y++) {
 				for (int x = minX; x <= maxX; x++) {
 					for (int z = minZ; z <= maxZ; z++) {
-						getBlocksInfo result = getGetBlocksInfo(world, x, y, z);
+						BlockInfoNoTile result = getGetBlocksInfo(world, x, y, z);
 						int id = result.id();
 						int meta = result.meta();
 						TileEntity tile = result.tile();
@@ -150,22 +150,9 @@ public class Stack extends CommandBase {
 						
 						BlockInfo info = new BlockInfo(x, y, z, id, meta, tileNBT);
 						
-						Block block = Block.blocksList[id];
+						//undoBlock.add(info);
 						
-						if (block != null) {
-							if ((!block.canPlaceBlockOnSide(world, 0, 254, 0, 1) ||
-									block instanceof BlockFluid ||
-									block.isFallingBlock() ||
-									!block.canPlaceBlockAt(world, 0, 254, 0))) {
-								undoNonBlock.add(info);
-							}
-							else {
-								undoBlock.add(info);
-							}
-						}
-						else {
-							undoBlock.add(info);
-						}
+						addBlockOrNonBlock(world, undoBlock, undoNonBlock, info);
 						
 						moveBlockList.add(info);
 					}
@@ -207,7 +194,7 @@ public class Stack extends CommandBase {
 					maxZ = Math.max(maxZ, z);
 					
 					saveBlockToPlace(info, x, y, z, world, nonBlockList, blockList);
-					saveBlockReplaced(world, x, y, z, undoBlock);
+					saveBlockReplaced(world, x, y, z, undoBlock, undoNonBlock);
 				}
 			}
 			

@@ -40,14 +40,12 @@ public class Redo extends CommandBase {
 				redoList.remove(redoList.size() - 1);
 				editList.add(queueInfo);
 				
-				List<Selection> selection = queueInfo.selection();
+				List<Selection> selections = queueInfo.selection();
 				
-				if (selection.size() > 1) {
-					pos1PlayersMap.put(sender, selection.get(1).pos1());
-					pos2PlayersMap.put(sender, selection.get(1).pos2());
-					PacketUtils.sendPosUpdate(1, (EntityPlayerMP) sender);
-					PacketUtils.sendPosUpdate(2, (EntityPlayerMP) sender);
-				}
+				pos1PlayersMap.put(sender, selections.get(0).pos1());
+				pos2PlayersMap.put(sender, selections.get(0).pos2());
+				PacketUtils.sendPosUpdate(1, (EntityPlayerMP) sender);
+				PacketUtils.sendPosUpdate(2, (EntityPlayerMP) sender);
 				
 				sendEditMsg(sender, "bu.transform.commands.redo");
 			}

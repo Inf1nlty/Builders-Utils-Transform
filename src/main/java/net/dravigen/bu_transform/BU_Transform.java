@@ -2,13 +2,12 @@ package net.dravigen.bu_transform;
 
 import api.AddonHandler;
 import api.BTWAddon;
-import api.config.AddonConfig;
 import net.dravigen.bu_transform.commands.*;
 
 public class BU_Transform extends BTWAddon {
 	public static BU_Transform instance;
 	
-	public static int SPEED;
+	public static int SPEED = 100;
 	
 	public BU_Transform() {
 		super();
@@ -20,16 +19,6 @@ public class BU_Transform extends BTWAddon {
 		AddonHandler.logMessage(this.getName() + " Version " + this.getVersionString() + " Initializing...");
 		
 		initCommands();
-	}
-	
-	@Override
-	public void registerConfigProperties(AddonConfig config) {
-		config.registerInt("bu_tr.editSpeed", 100, "Number of blocks placed per tick during an edit.");
-	}
-	
-	@Override
-	public void handleConfigProperties(AddonConfig config) {
-		SPEED = config.getInt("bu_tr.editSpeed");
 	}
 	
 	private void initCommands() {

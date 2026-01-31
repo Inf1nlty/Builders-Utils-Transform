@@ -1,7 +1,6 @@
 package net.dravigen.bu_transform.commands;
 
 import net.dravigen.bu_transform.BU_Transform;
-import net.dravigen.bu_transform.api.ConfigUpdater;
 import net.dravigen.bu_transform.api.ToolHelper;
 import net.minecraft.src.CommandBase;
 import net.minecraft.src.ICommandSender;
@@ -27,7 +26,6 @@ public class EditSpeed extends CommandBase {
 			}
 			
 			int value = Integer.parseInt(strings[0]);
-			ConfigUpdater.updateValue(BU_Transform.instance.addonConfig, "bu_tr.editSpeed", value);
 			BU_Transform.SPEED = value;
 			
 			ToolHelper.sendEditMsg(iCommandSender, "bu.transform.commands.editSpeed", value);

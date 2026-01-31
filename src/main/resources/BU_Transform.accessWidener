@@ -1,0 +1,3 @@
+accessWidener v1 named
+accessible method net/minecraft/src/Chunk relightBlock (III)V
+accessible method net/minecraft/src/Chunk propagateSkylightOcclusion (II)V

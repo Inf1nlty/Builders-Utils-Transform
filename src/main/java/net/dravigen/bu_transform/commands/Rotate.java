@@ -55,9 +55,6 @@ public class Rotate extends CommandBase {
 			int maxY = Math.max(y1, y2);
 			int maxZ = Math.max(z1, z2);
 			
-			Selection selection1 = new Selection(new BlockPos(minX, minY, minZ), new BlockPos(maxX, maxY, maxZ));
-			
-			
 			List<EntityInfo> entities = new ArrayList<>();
 			List<Entity> entitiesInSelection = world.getEntitiesWithinAABBExcludingEntity(player,
 																						  new AxisAlignedBB(minX,
@@ -70,6 +67,7 @@ public class Rotate extends CommandBase {
 			
 			List<EntityInfo> undoEntity = new ArrayList<>();
 			Queue<BlockInfo> undoBlock = new LinkedList<>();
+			List<BlockInfo> undoNonBlock = new ArrayList<>();
 			Queue<BlockToRemoveInfo> blocksToRemove = new LinkedList<>();
 			
 			boolean clockwise = Arrays.stream(strings).anyMatch(s -> s.equalsIgnoreCase("false"));
@@ -105,7 +103,7 @@ public class Rotate extends CommandBase {
 			for (int y = minY; y <= maxY; y++) {
 				for (int x = minX; x <= maxX; x++) {
 					for (int z = minZ; z <= maxZ; z++) {
-						getBlocksInfo result = getGetBlocksInfo(world, x, y, z);
+						BlockInfoNoTile result = getGetBlocksInfo(world, x, y, z);
 						int id = result.id();
 						int meta = result.meta();
 						TileEntity tile = result.tile();
@@ -120,7 +118,11 @@ public class Rotate extends CommandBase {
 							nbt.removeTag("z");
 						}
 						
-						undoBlock.add(new BlockInfo(x, y, z, id, meta, nbt));
+						BlockInfo blockInfo = new BlockInfo(x, y, z, id, meta, nbt);
+						
+						//undoBlock.add(blockInfo);
+						
+						addBlockOrNonBlock(world, undoBlock, undoNonBlock, blockInfo);
 						
 						double centerX = (maxX + minX) / 2d;
 						double centerZ = (maxZ + minZ) / 2d;
@@ -163,22 +165,24 @@ public class Rotate extends CommandBase {
 				maxZ = Math.max(maxZ, z);
 				
 				saveBlockToPlace(info, x, y, z, world, nonBlockList, blockList);
-				saveBlockReplaced(world, x, y, z, undoBlock);
+				saveBlockReplaced(world, x, y, z, undoBlock, undoNonBlock);
 			}
 			
-			pos1PlayersMap.put(sender, new BlockPos(minX, minY, minZ));
-			pos2PlayersMap.put(sender, new BlockPos(maxX, maxY, maxZ));
+			Selection selection1 = new Selection(new BlockPos(minX, minY, minZ), new BlockPos(maxX, maxY, maxZ));
+			Selection selection2 = new Selection(pos1, pos2);
+			
+			pos1PlayersMap.put(sender, selection1.pos1());
+			pos2PlayersMap.put(sender, selection1.pos2());
 			PacketUtils.sendPosUpdate(1, (EntityPlayerMP) sender);
 			PacketUtils.sendPosUpdate(2, (EntityPlayerMP) sender);
 			
-			Selection selection2 = new Selection(pos1, pos2);
 			
 			SavedLists edit = new SavedLists(new ArrayList<>(nonBlockList),
 											 new LinkedList<>(blockList),
 											 new LinkedList<>(),
 											 new ArrayList<>(entities),
 											 new LinkedList<>(blocksToRemove));
-			SavedLists undo = new SavedLists(new ArrayList<>(),
+			SavedLists undo = new SavedLists(new ArrayList<>(undoNonBlock),
 											 new LinkedList<>(undoBlock),
 											 new LinkedList<>(),
 											 new ArrayList<>(undoEntity),

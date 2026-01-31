@@ -86,7 +86,7 @@ public class Copy extends CommandBase {
 		for (int y = minY; y <= maxY; y++) {
 			for (int x = minX; x <= maxX; x++) {
 				for (int z = minZ; z <= maxZ; z++) {
-					getBlocksInfo result = getGetBlocksInfo(world, x, y, z);
+					BlockInfoNoTile result = getGetBlocksInfo(world, x, y, z);
 					int id = result.id();
 					int meta = result.meta();
 					TileEntity tile = result.tile();

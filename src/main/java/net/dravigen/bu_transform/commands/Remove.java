@@ -71,7 +71,7 @@ public class Remove extends CommandBase {
 					for (int z = minZ; z <= maxZ; z++) {
 						blocksToRemove.add(new BlockToRemoveInfo(x, y, z, world.blockHasTileEntity(x, y, z)));
 						
-						saveBlockReplaced(world, x, y, z, undoBlock);
+						saveBlockReplaced(world, x, y, z, undoBlock, undoNonBlock);
 					}
 				}
 			}
